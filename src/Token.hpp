@@ -1,25 +1,35 @@
-#ifndef COMPILERPROJECT_TOKEN_H
-#define COMPILERPROJECT_TOKEN_H
-#include <regex>
+#ifndef COMPILERPROJECT_TOKEN_HPP
+#define COMPILERPROJECT_TOKEN_HPP
 #include <string>
-
-using namespace std;
+#include <iostream>
+#include "Lexer.hpp"
+class Lexer;
 
 class Token {
 
 public:
 
+    enum Type {None, Keyword, Identifier, Parenthesis, Brace, Semicolon, Literal_int};
+
     Token();
-    explicit Token(string chars);
+    Token(const std::string& chars, const Type& type);
+    explicit Token(const std::string & chars);
+    std::string GetRaw() const;
+    Type GetType() const;
+    std::string TypeString() const;
 
-    enum Type { None, Number, Keyword, String };
-    Type type;
+    friend std::istream & operator >> (std::istream & is, Token & token);
+    friend std::ostream & operator << (std::ostream & os, Token & token);
 
-    string GetChars();
 
-private:
-    string _readCharacters;
+protected:
+
+    std::string _readCharacters;
+    Type _type;
+
+    static Type ParseType(const std::string & toParse);
+    void Set(const std::string & toSet);
 };
 
 
-#endif //COMPILERPROJECT_TOKEN_H
+#endif //COMPILERPROJECT_TOKEN_HPP

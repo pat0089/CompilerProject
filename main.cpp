@@ -1,37 +1,28 @@
 #include <iostream>
 #include "src/Token.hpp"
+#include "src/Compiler.hpp"
 #include <vector>
-
-vector<Token> lex(string readInFile) {
-    vector<Token> toReturn;
-    istringstream iss(readInFile);
-    for (string s; iss >> s;) {
-        toReturn.emplace_back(s);
-    }
-    return toReturn;
-}
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::vector;
+using std::string;
 
 int main() {
-    string hello = "Hello, World! 1234\n+11231244\t-1.0e2 123 \n\n\t";
-    vector<Token> lexed = lex(hello);
-    cout << hello << endl;
+    Compiler c;
+    //most basic program, return a value:
+    string return_2 = "int main() {    \n"
+                      "    return 2;   \n"
+                      "}               ";
+    vector<Token> lexedReturn2 = c.Lex(return_2);
 
-    for (int i = 0; i < lexed.size(); i++) {
-        switch (lexed[i].type) {
-            case Token::Number:
-                cout << "Type: Number\n" + lexed[i].GetChars() << endl;
-                break;
-            case Token::String:
-                cout << "Type: String\n" + lexed[i].GetChars() << endl;
-                break;
-            case Token::None:
-                cout << "Empty Token\n";
-                break;
-            default:
-                cerr << "ERROR: Unknown Token Type!" << endl;
-                break;
-        }
-        cout << endl;
+    for (int i = 0; i < lexedReturn2.size(); i++) {
+        cout << lexedReturn2[i] << endl;
     }
+
+    cout << "********************" << endl;
+    cout << return_2 << endl;
+    cout << "********************" << endl;
+
     return 0;
 }
