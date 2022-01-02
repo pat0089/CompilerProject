@@ -1,22 +1,43 @@
 #include "Compiler.hpp"
-#include <sstream>
-using std::string;
 using std::vector;
+using std::string;
 using std::istream;
+using std::deque;
 
-vector<Token> Compiler::Lex(string toLex) {
-    vector<Token> toReturn;
-    std::stringstream processor(toLex);
-    for (Token t; processor >> t;) {
-        toReturn.push_back(t);
-    }
-    return toReturn;
+void Compiler::Lex(const string & toLex) {
+    _lexer->Lex(toLex);
 }
 
-vector<Token> Compiler::Lex(istream &is) {
-    vector<Token> toReturn;
-    for (Token t; is >> t;) {
-        toReturn.push_back(t);
-    }
-    return toReturn;
+void Compiler::Lex(istream & is) {
+    _lexer->Lex(is);
+}
+
+void Compiler::Parse() {
+    _parser->Parse(GetLexedList());
+}
+
+const TokenList & Compiler::GetLexedList() const {
+    return _lexer->GetList();
+}
+
+const AST &Compiler::GetAST() const {
+    return _parser->GetAST();
+}
+
+Parser &Compiler::GetParser() const {
+    return *_parser;
+}
+
+Lexer &Compiler::GetLexer() const {
+    return *_lexer;
+}
+
+Compiler::Compiler() {
+    _lexer = new Lexer();
+    _parser = new Parser();
+}
+
+Compiler::~Compiler() {
+    delete _lexer;
+    delete _parser;
 }

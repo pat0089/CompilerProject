@@ -3,12 +3,29 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "Token.hpp"
+#include "Stages/Lexer.hpp"
+#include "Stages/Parser.hpp"
 
 class Compiler {
 public:
-    std::vector<Token> Lex(std::string toLex);
-    std::vector<Token> Lex(std::istream & is);
-};
+
+    Compiler();
+    ~Compiler();
+
+    void Lex(const std::string & toLex);
+    void Lex(std::istream & is);
+    void Parse();
+
+    const TokenList & GetLexedList() const;
+    const AST & GetAST() const;
+
+    Parser & GetParser() const;
+    Lexer & GetLexer() const;
+
+private:
+    Lexer * _lexer;
+    Parser * _parser;
+    //Assembler _assembler;
+} static Compiler;
 
 #endif //COMPILERPROJECT_COMPILER_HPP
