@@ -8,9 +8,9 @@ using std::string;
 using std::ostream;
 using std::istream;
 
-Token::Token() : _readCharacters(nullptr), _lastToken(nullptr), _nextToken(nullptr), _tokenType(TokenType::None) { }
+Token::Token() : _readCharacters(nullptr), _tokenType(TokenType::None) { }
 
-Token::Token(const string & chars) : _lastToken(nullptr), _nextToken(nullptr) {
+Token::Token(const string & chars) {
     _readCharacters = new string(chars);
     _tokenType = GetType(chars);
 }
@@ -37,6 +37,7 @@ bool Token::operator==(const Token &token) const {
 
 Token::Token(const Token &toCopy) {
     _readCharacters = new string(toCopy.GetRaw());
+    _tokenType = GetType(toCopy.GetRaw());
 }
 
 Token * Token::Create(const string & rawString) {
@@ -59,14 +60,6 @@ Token::~Token() {
     delete _readCharacters;
 }
 
-Token *Token::Next() const {
-    return _nextToken;
-}
-
-Token *Token::Last() const {
-    return _lastToken;
-}
-
 TokenType Token::GetType(const string &rawString) {
     if (std::regex_match(rawString, Lexer::isKeyword)) {
         return TokenType::Keyword;
@@ -83,14 +76,6 @@ TokenType Token::GetType(const string &rawString) {
 
 TokenType Token::Type() const {
     return _tokenType;
-}
-
-void Token::Next(Token *next) {
-    _nextToken = next;
-}
-
-void Token::Last(Token *last) {
-    _lastToken = last;
 }
 
 

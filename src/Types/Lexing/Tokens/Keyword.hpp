@@ -11,7 +11,7 @@ public:
     KeywordType KeyType() const;
 private:
     KeywordType _keyType;
-    static KeywordType GetKeyType();
+    static KeywordType GetKeyType(const std::string & rawString);
 };
 
 

@@ -6,12 +6,6 @@
 
 enum class TokenType { None, Identifier, Keyword, Literal, Symbol };
 
-/*
-class Identifier;
-class Keyword;
-class Literal;
-class Symbol;
-*/
 class Token {
 
 public:
@@ -21,12 +15,6 @@ public:
     std::string & GetRaw() const;
     void SetRaw(const std::string & toSet);
 
-    Token * Next() const;
-    Token * Last() const;
-    void Next(Token * next);
-    void Last(Token * last);
-
-    //friend std::istream & operator >> (std::istream & is, Token & token);
     friend std::ostream & operator << (std::ostream & os, const Token & token);
     bool operator == (const Token & token) const;
 
@@ -41,8 +29,6 @@ public:
 protected:
 
     std::string * _readCharacters;
-    Token * _nextToken;
-    Token * _lastToken;
 
     TokenType _tokenType;
 

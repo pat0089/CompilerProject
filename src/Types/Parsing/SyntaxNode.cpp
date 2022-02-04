@@ -44,7 +44,7 @@ void SyntaxNode::Add(SyntaxNode **children, int childCount) {
 
 void SyntaxNode::Add(SyntaxNode * child) {
     //copy over child reference array
-    SyntaxNode ** oldChildren = new SyntaxNode* [_childCount];
+    auto oldChildren = new SyntaxNode* [_childCount];
     for (int i = 0; i < _childCount; i++) {
         oldChildren[i] = _children[i];
     }
@@ -144,10 +144,4 @@ std::ostream &operator<<(std::ostream &os, SyntaxNode &rhs) {
 
 int SyntaxNode::ChildCount() const {
     return _childCount;
-}
-
-template<class Node>
-void SyntaxNode::TryCast(Node * node, SyntaxNode * toCast) {
-    static_assert(std::is_base_of<SyntaxNode, Node>(node), "Node should be derived of type SyntaxNode");
-    node = dynamic_cast<Node *>(toCast);
 }

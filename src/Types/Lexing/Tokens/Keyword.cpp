@@ -10,9 +10,13 @@ KeywordType Keyword::KeyType() const {
 }
 
 Keyword::Keyword(const string &toInit) : Token(toInit) {
-    _keyType = GetKeyType();
+    _keyType = GetKeyType(toInit);
 }
 
-KeywordType Keyword::GetKeyType() {
-    return KeywordType::Return;
+KeywordType Keyword::GetKeyType(const string & rawString) {
+    if (rawString == "return") {
+        return KeywordType::Return;
+    } else {
+        return KeywordType::Int;
+    }
 }

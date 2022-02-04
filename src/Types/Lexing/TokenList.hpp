@@ -1,10 +1,9 @@
 #ifndef COMPILERPROJECT_TOKENLIST_HPP
 #define COMPILERPROJECT_TOKENLIST_HPP
+#include <set>
 #include <iostream>
 #include "Tokens/Token.hpp"
 
-using std::istream;
-using std::ostream;
 
 class Token;
 
@@ -16,7 +15,6 @@ enum class SymbolType;
 class TokenList {
 public:
     TokenList();
-    explicit TokenList(Token * tokens);
     ~TokenList();
     TokenList(const TokenList & toCopy);
 
@@ -25,34 +23,31 @@ public:
 
     //Used for parsing
     Token * PopFront();
-    void PutbackFront(Token * token);
 
     //get the type of the frontmost token
     TokenType PeekType() const;
-    Token * PeekFront();
+    Token * Front() const;
 
-    //returns a nullptr-terminated list of tokens from the front until the type of token is found, inclusive
-    Token * SeekAndPop(TokenType type);
-    Token * SeekSymbolPop(SymbolType stype);
+    //returns a reference to the next typed token in the list
+    Token * SeekToNext(TokenType type, Token * from = nullptr);
 
-    //returns the pointer to the next typed token in the list
-    Token * SeekTo(TokenType type) const;
-    Token * SeekToNextSymbol(SymbolType stype) const;
-    Token * SeekToNextSymbol() const;
-    Token * SeekToNextLiteral() const;
-    Token * SeekToNextKeyword(KeywordType ktype) const;
-    Token * SeekToNextKeyword() const;
-    Token * SeekToNextIdentifier() const;
+    TokenList * SeekToPop(Token * toPopAfter);
+
+    Token * SeekToNextSymbol();
+    Token * SeekToNextLiteral();
+    Token * SeekToNextKeyword();
+    Token * SeekToNextIdentifier();
+
+    Token * SeekToNextSymbol(SymbolType stype);
+    Token * SeekToNextKeyword(KeywordType ktype);
 
     friend std::istream & operator >> (std::istream & is, TokenList & tokenList);
     friend std::ostream & operator << (std::ostream & os, const TokenList & tokenList);
 
 private:
-    Token * _front;
-    Token * _back;
 
-    //returns a nullptr-terminated list of tokens from the front until the token is found, inclusive
-    Token * PopFromFront(Token * token);
+    std::deque<Token *>  *_tokens;
+
 };
 
 #endif //COMPILERPROJECT_TOKENLIST_HPP

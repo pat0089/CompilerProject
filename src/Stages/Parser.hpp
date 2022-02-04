@@ -9,6 +9,11 @@ public:
     void Parse(const TokenList & tokens);
     const AST & GetAST() const;
 
+    static Token * _lastParsed;
+    static TokenType _expectedType;
+    static KeywordType _expectedKeyType;
+    static SymbolType _expectedSymbolType;
+
 private:
     AST _ast;
 
@@ -17,7 +22,6 @@ private:
 
     //thinking ahead for error detection and mitigation
     TokenList * _curList;
-    Token * _lastParsed;
 
     //Lexed list manipulation functions
 
@@ -32,7 +36,11 @@ private:
     StatementNode * ParseStatement();
     ExpressionNode * ParseExpression();
 
-    void Fail();
+    static void Fail(bool hasMain = true);
+    static void Fail(TokenType type);
+    static void Fail(SymbolType stype);
+    static void Fail(KeywordType ktype);
+
 
     TokenList & List();
     void PopFront();
