@@ -25,6 +25,7 @@ set(SOURCE_FILES
         src/Types/Lexing/Tokens/Symbol.cpp
         src/Types/Lexing/Tokens/Literal.cpp
         src/Types/Lexing/Tokens/Identifier.cpp
+        src/Stages/CodeGenerator.cpp
         )
 
 set(HEADER_FILES
@@ -48,6 +49,7 @@ set(HEADER_FILES
         src/Types/Lexing/Tokens/Symbol.hpp
         src/Types/Lexing/Tokens/Literal.hpp
         src/Types/Lexing/Tokens/Identifier.hpp
+        src/Stages/CodeGenerator.hpp
         )
 
 add_executable(CompilerProject ${SOURCE_FILES})
