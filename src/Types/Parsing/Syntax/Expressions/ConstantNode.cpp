@@ -3,6 +3,7 @@ using std::string;
 
 ConstantNode::ConstantNode(int toInit) {
     _val = new int(toInit);
+    _stype = SyntaxType::Constant;
 }
 
 int & ConstantNode::Value() const {

@@ -32,12 +32,19 @@ Lexer &Compiler::GetLexer() const {
     return *_lexer;
 }
 
+CodeGenerator& Compiler::GetCodeGenerator() const
+{
+    return *_codeGenerator;
+}
+
 Compiler::Compiler() {
     _lexer = new Lexer();
     _parser = new Parser();
+    _codeGenerator = new CodeGenerator();
 }
 
 Compiler::~Compiler() {
     delete _lexer;
     delete _parser;
+    delete _codeGenerator;
 }

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 
+enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Constant};
+
 class SyntaxNode {
 
 public:
@@ -32,14 +34,15 @@ public:
     friend std::ostream & operator << (std::ostream & os, SyntaxNode & rhs);
     virtual std::string PrettyPrint() = 0;
 
-    template<typename Node>
-    void TryCast(Node * node, SyntaxNode * toCast);
+    SyntaxType Type() const;
 
 protected:
 
     int _childCount;
     SyntaxNode ** _children;
     SyntaxNode * _parent;
+
+    SyntaxType _stype;
 
 };
 

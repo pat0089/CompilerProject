@@ -3,6 +3,7 @@
 #include "src/Compiler.hpp"
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 using std::cout;
 using std::cerr;
@@ -12,13 +13,22 @@ using std::string;
 
 int main(int argc, char * argv[]) {
 
+    std::string fname = argv[1] ? argv[1] : "";
+
     std::ifstream fin;
 
-    if (argc > 1) {
-        fin.open(argv[1]);
+    if (!fname.empty()) {
+        fin.open(fname);
     }
 
-    std::istream &in = fin.is_open() ? fin : std::cin;
+    //fake program to parse if we have no filename input
+    auto temp = std::string("int main() {\n") +
+            std::string("\treturn 2;\n") +
+            std::string("}");
+
+    std::istringstream sin(temp);
+
+    std::istream& in = fin.is_open() ? static_cast<std::istream&>(fin) : sin;
 
     Compiler.Lex(in);
     cout << "Split by tokens:" << endl;
@@ -28,7 +38,12 @@ int main(int argc, char * argv[]) {
     Compiler.Parse();
     cout << Compiler.GetAST();
 
-
+    if (fname.empty()) {
+        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), "a.out");
+    }
+    else {
+        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), fname.substr(0, fname.find_last_of('.')));
+    }
 
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include "Stages/Lexer.hpp"
 #include "Stages/Parser.hpp"
+#include "Stages/CodeGenerator.hpp"
 
 class Compiler {
 public:
@@ -21,11 +22,12 @@ public:
 
     Parser & GetParser() const;
     Lexer & GetLexer() const;
+    CodeGenerator & GetCodeGenerator() const;
 
 private:
     Lexer * _lexer;
     Parser * _parser;
-    //Assembler _assembler;
+    CodeGenerator * _codeGenerator;
 } static Compiler;
 
 #endif //COMPILERPROJECT_COMPILER_HPP

@@ -145,3 +145,7 @@ std::ostream &operator<<(std::ostream &os, SyntaxNode &rhs) {
 int SyntaxNode::ChildCount() const {
     return _childCount;
 }
+
+SyntaxType SyntaxNode::Type() const {
+    return _stype;
+}

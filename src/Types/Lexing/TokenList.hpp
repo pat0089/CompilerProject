@@ -1,6 +1,7 @@
 #ifndef COMPILERPROJECT_TOKENLIST_HPP
 #define COMPILERPROJECT_TOKENLIST_HPP
 #include <set>
+#include <deque>
 #include <iostream>
 #include "Tokens/Token.hpp"
 
