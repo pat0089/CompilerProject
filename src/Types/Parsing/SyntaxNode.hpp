@@ -34,7 +34,7 @@ public:
     friend std::ostream & operator << (std::ostream & os, SyntaxNode & rhs);
     virtual std::string PrettyPrint() = 0;
 
-    SyntaxType Type() const;
+    virtual SyntaxType Type() const = 0;
 
 protected:
 

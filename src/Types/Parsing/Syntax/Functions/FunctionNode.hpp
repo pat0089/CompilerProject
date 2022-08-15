@@ -13,6 +13,10 @@ public:
     Parameters & Params() const;
     BodyNode & Body() const;
 
+    SyntaxType Type() const override {
+        return SyntaxType::Function;
+    }
+
 private:
     std::string * _name;
 };

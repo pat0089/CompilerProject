@@ -3,7 +3,16 @@
 #include "../../SyntaxNode.hpp"
 
 class ParameterNode : public SyntaxNode {
+
+public:
+    SyntaxType Type() const override {
+        return SyntaxType::Parameters;
+    }
+
+private:
+
     std::string PrettyPrint() override;
+
 };
 
 

@@ -11,6 +11,10 @@ public:
 
     FunctionNode & operator[](int i) const;
 
+    SyntaxType Type() const override {
+        return SyntaxType::Program;
+    }
+
 protected:
     FunctionNode * _main;
 };

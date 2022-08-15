@@ -3,7 +3,6 @@
 #include "src/Compiler.hpp"
 #include <vector>
 #include <fstream>
-#include <sstream>
 
 using std::cout;
 using std::cerr;
@@ -13,6 +12,7 @@ using std::string;
 
 int main(int argc, char * argv[]) {
 
+    if (argc != 2) return -1;
     std::string fname = argv[1] ? argv[1] : "";
 
     std::ifstream fin;
@@ -20,30 +20,25 @@ int main(int argc, char * argv[]) {
     if (!fname.empty()) {
         fin.open(fname);
     }
-
-    //fake program to parse if we have no filename input
-    auto temp = std::string("int main() {\n") +
-            std::string("\treturn 2;\n") +
-            std::string("}");
-
-    std::istringstream sin(temp);
-
-    std::istream& in = fin.is_open() ? static_cast<std::istream&>(fin) : sin;
-
-    Compiler.Lex(in);
+    cout << fin.is_open() << endl;
+    Compiler.Lex(fin);
     cout << "Split by tokens:" << endl;
-    cout << Compiler.GetLexer();
-    cout << endl << "********************" << endl;
+    cout << Compiler.GetLexer();    cout << endl << "********************" << endl;
 
     Compiler.Parse();
     cout << Compiler.GetAST();
 
+    auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
+
     if (fname.empty()) {
-        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), "a.out");
+        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), "out.s");
     }
     else {
-        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), fname.substr(0, fname.find_last_of('.')));
+        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), fnameWithoutFS + ".s");
     }
+
+    std::system(std::string("gcc -c " + fnameWithoutFS + ".s -o" + fnameWithoutFS + ".o").c_str());
+    std::system(std::string("gcc " + fnameWithoutFS + ".o -o" + fnameWithoutFS + ".out").c_str());
 
     return 0;
 }

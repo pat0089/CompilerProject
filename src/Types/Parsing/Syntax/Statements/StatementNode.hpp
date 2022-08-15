@@ -3,6 +3,11 @@
 #include "../../SyntaxNode.hpp"
 
 class StatementNode : public SyntaxNode {
+public:
+
+    SyntaxType Type() const override {
+        return SyntaxType::Statement;
+    }
 
 };
 

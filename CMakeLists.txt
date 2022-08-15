@@ -1,3 +1,5 @@
+project(CompilerProject)
+
 cmake_minimum_required(VERSION 3.16)
 project(CompilerProject)
 
@@ -53,3 +55,17 @@ set(HEADER_FILES
         )
 
 add_executable(CompilerProject ${SOURCE_FILES})
+
+set_target_properties(CompilerProject PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    VS_DEBUGGER_COMMAND_ARGUMENTS "res/return_2.txt"
+)
+
+add_custom_target(copy_resources ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_SOURCE_DIR}/res
+        ${PROJECT_BINARY_DIR}/res
+        COMMENT "Copying resources (/res) to binary directory"
+)
+
+add_dependencies(CompilerProject copy_resources)
