@@ -22,6 +22,8 @@ public:
     //Lexing functionality
     void Lex(std::istream & is);
 
+    bool Verify();
+
     friend std::istream & operator >> (std::istream & is, Lexer & lexer);
     friend std::ostream & operator << (std::ostream & os, const Lexer & lexer);
 
@@ -31,6 +33,7 @@ public:
 
 private:
     TokenList * _tokens;
+    bool _verified = false;
 };
 
 

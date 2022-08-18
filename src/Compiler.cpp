@@ -9,7 +9,7 @@ void Compiler::Lex(istream & is) {
 }
 
 void Compiler::Parse() {
-    _parser->Parse(GetLexedList());
+    if (_lexer->Verify()) _parser->Parse(GetLexedList());
 }
 
 const TokenList & Compiler::GetLexedList() const {
@@ -46,5 +46,5 @@ Compiler::~Compiler() {
 }
 
 void Compiler::Generate(const std::string & fname) {
-    _codeGenerator->Generate(_parser->GetAST(), fname + ".s");
+    if (_lexer->Verify() && _parser->Verify()) _codeGenerator->Generate(_parser->GetAST(), fname + ".s");
 }

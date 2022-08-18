@@ -45,9 +45,18 @@ public:
     friend std::istream & operator >> (std::istream & is, TokenList & tokenList);
     friend std::ostream & operator << (std::ostream & os, const TokenList & tokenList);
 
+    bool Verify() const;
+
+    Token & operator[] (int i);
+
 private:
 
     std::deque<Token *>  *_tokens;
+    bool match_all_braces() const;
+    bool match_curly_braces() const;
+    bool match_square_braces() const;
+    bool match_smooth_braces() const;
+
 
 };
 

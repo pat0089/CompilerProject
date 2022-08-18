@@ -14,6 +14,8 @@ public:
     static KeywordType _expectedKeyType;
     static SymbolType _expectedSymbolType;
 
+    static bool Verify();
+
 private:
     AST _ast;
 
@@ -49,6 +51,8 @@ private:
     bool IsNextToken(TokenType type);
     bool IsNextToken(SymbolType stype);
     bool IsNextToken(KeywordType ktype);
+
+    static bool _verified;
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP

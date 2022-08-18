@@ -80,3 +80,8 @@ string Lexer::LexNextToken(istream & is) {
 Lexer::~Lexer() {
     delete _tokens;
 }
+
+bool Lexer::Verify() {
+    if (!_verified) _verified = _tokens->Verify();
+    return _verified;
+}

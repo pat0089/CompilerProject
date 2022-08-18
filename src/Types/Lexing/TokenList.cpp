@@ -110,3 +110,53 @@ TokenList *TokenList::SeekToPop(Token *toPopAfter) {
     }
     return toReturn;
 }
+
+Token &TokenList::operator[](int i) {
+    return *_tokens->at(i);
+}
+
+
+bool TokenList::Verify() const {
+    return match_all_braces();
+}
+
+bool TokenList::match_all_braces() const {
+
+    std::stack<SymbolType> st;
+
+    for (int i = 0; i < _tokens->size(); i++) {
+        Token *temp = _tokens->at(i);
+        TokenType type = temp->Type();
+        if (type != TokenType::Symbol) continue;
+        auto *stemp = (Symbol *) temp;
+        SymbolType stype = stemp->SymType();
+
+        if (stype != SymbolType::Open_Brace &&
+            stype != SymbolType::Open_Bracket &&
+            stype != SymbolType::Open_Chevron &&
+            stype != SymbolType::Open_Parenthesis &&
+            stype != SymbolType::Close_Brace &&
+            stype != SymbolType::Close_Bracket &&
+            stype != SymbolType::Close_Chevron &&
+            stype != SymbolType::Close_Parenthesis
+                )
+            continue;
+
+        if (stype == SymbolType::Open_Brace ||
+            stype == SymbolType::Open_Bracket ||
+            stype == SymbolType::Open_Chevron ||
+            stype == SymbolType::Open_Parenthesis
+                ) {
+            st.push(stype);
+        } else {
+            //break the loop if met:
+            if (st.empty()) return false;
+            if (st.top() == SymbolType::Open_Brace && stype != SymbolType::Close_Brace) return false;
+            if (st.top() == SymbolType::Open_Bracket && stype != SymbolType::Close_Bracket) return false;
+            if (st.top() == SymbolType::Open_Chevron && stype != SymbolType::Close_Chevron) return false;
+            if (st.top() == SymbolType::Open_Parenthesis && stype != SymbolType::Close_Parenthesis) return false;
+            st.pop();
+        }
+    }
+    return st.empty();
+}

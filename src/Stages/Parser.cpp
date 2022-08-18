@@ -17,6 +17,7 @@ void Parser::Parse(const TokenList & tokens) {
     //create a copy of the token list to modify and parse as necessary
     _tokens = new TokenList(tokens);
     _curList = _tokens;
+    _verified = true;
     _ast.Program(ParseProgram());
 }
 
@@ -159,6 +160,7 @@ Token *Parser::PeekFront() {
 
 //fail should output a bit more information now
 void Parser::Fail(bool hasMain) {
+    if (_verified) _verified = false;
     if (_lastParsed->Type() == TokenType::None) {
         cerr << "FAIL0!: Empty Token\n";
     } else if (!hasMain) {
@@ -259,4 +261,10 @@ void Parser::Fail(KeywordType ktype) {
     _expectedKeyType = ktype;
     _expectedSymbolType = SymbolType::None;
     Fail();
+}
+
+bool Parser::_verified = true;
+
+bool Parser::Verify() {
+    return _verified;
 }
