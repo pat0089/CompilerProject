@@ -13,9 +13,9 @@ public:
     Compiler();
     ~Compiler();
 
-    void Lex(const std::string & toLex);
     void Lex(std::istream & is);
     void Parse();
+    void Generate(const std::string & fname);
 
     const TokenList & GetLexedList() const;
     const AST & GetAST() const;

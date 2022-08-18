@@ -13,32 +13,22 @@ using std::string;
 int main(int argc, char * argv[]) {
 
     if (argc != 2) return -1;
-    std::string fname = argv[1] ? argv[1] : "";
+    std::string fname = argv[1];
 
-    std::ifstream fin;
-
-    if (!fname.empty()) {
-        fin.open(fname);
-    }
-    cout << fin.is_open() << endl;
+    std::ifstream fin(fname);
     Compiler.Lex(fin);
-    cout << "Split by tokens:" << endl;
-    cout << Compiler.GetLexer();    cout << endl << "********************" << endl;
+    //cout << "Split by tokens:" << endl;
+    //cout << Compiler.GetLexer();    cout << endl << "********************" << endl;
 
     Compiler.Parse();
-    cout << Compiler.GetAST();
+    //cout << Compiler.GetAST();
 
     auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
 
-    if (fname.empty()) {
-        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), "out.s");
-    }
-    else {
-        Compiler.GetCodeGenerator().Generate(Compiler.GetAST(), fnameWithoutFS + ".s");
-    }
+    Compiler.Generate(fnameWithoutFS + ".s");
 
     std::system(std::string("gcc -c " + fnameWithoutFS + ".s -o" + fnameWithoutFS + ".o").c_str());
-    std::system(std::string("gcc " + fnameWithoutFS + ".o -o" + fnameWithoutFS + ".out").c_str());
+    std::system(std::string("gcc " + fnameWithoutFS + ".o -o" + fnameWithoutFS).c_str());
 
     return 0;
 }

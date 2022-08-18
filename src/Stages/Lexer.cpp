@@ -11,11 +11,6 @@ const regex Lexer::isIdentifier = regex("[a-zA-Z]+");
 const regex Lexer::isLiteral = regex("[0-9]+");
 const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\;|\+|\-|\*|\/|\=)");
 
-void Lexer::Lex(const string & toLex) {
-    std::stringstream processor(toLex);
-    processor >> *_tokens;
-}
-
 void Lexer::Lex(istream & is) {
     is >> *_tokens;
 }

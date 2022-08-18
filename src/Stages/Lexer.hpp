@@ -20,7 +20,6 @@ public:
     const static std::regex isSymbol;
 
     //Lexing functionality
-    void Lex(const std::string & toLex);
     void Lex(std::istream & is);
 
     friend std::istream & operator >> (std::istream & is, Lexer & lexer);

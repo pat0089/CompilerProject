@@ -4,10 +4,6 @@ using std::string;
 using std::istream;
 using std::deque;
 
-void Compiler::Lex(const string & toLex) {
-    _lexer->Lex(toLex);
-}
-
 void Compiler::Lex(istream & is) {
     _lexer->Lex(is);
 }
@@ -47,4 +43,8 @@ Compiler::~Compiler() {
     delete _lexer;
     delete _parser;
     delete _codeGenerator;
+}
+
+void Compiler::Generate(const std::string & fname) {
+    _codeGenerator->Generate(_parser->GetAST(), fname + ".s");
 }
