@@ -5,9 +5,8 @@
 class StatementNode : public SyntaxNode {
 public:
 
-    SyntaxType Type() const override {
-        return SyntaxType::Statement;
-    }
+    StatementNode();
+    StatementNode(SyntaxType stype);
 
 };
 

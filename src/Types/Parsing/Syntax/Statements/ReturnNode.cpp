@@ -1,10 +1,10 @@
 #include "ReturnNode.hpp"
 using std::string;
 
-ReturnNode::ReturnNode(ExpressionNode * exp) {
+ReturnNode::ReturnNode(ExpressionNode * exp) : StatementNode(SyntaxType::Return) {
     Add(exp);
 }
 
 string ReturnNode::PrettyPrint() {
-    return string("Return");
+    return "Return";
 }

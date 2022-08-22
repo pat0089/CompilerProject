@@ -9,10 +9,6 @@ public:
     void Value(int i);
     std::string PrettyPrint() override;
 
-    SyntaxType Type() const override {
-        return SyntaxType::Constant;
-    }
-
 private:
     int * _val;
 };

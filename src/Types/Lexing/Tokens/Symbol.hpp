@@ -18,6 +18,7 @@ public:
     explicit Symbol(const std::string & toInit);
     std::string TypeString() const override;
     SymbolType SymType() const;
+    static std::string GetString(SymbolType stype);
 private:
     SymbolType _symType;
     static SymbolType GetSymType(const std::string & rawString);

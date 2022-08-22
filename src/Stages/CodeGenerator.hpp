@@ -16,9 +16,17 @@ private:
 
     void WriteFunction(FunctionNode & fnode, std::ofstream & file);
 
+    //register operations
     void WriteToRegister(const std::string & reg, ConstantNode & cnode, std::ofstream & file);
+    void NegateRegister(const std::string & reg, std::ofstream & file);
+    void LogicalNegateRegister(const std::string & reg, std::ofstream & file);
+
 
     void WriteReturn(ReturnNode & rnode, std::ofstream & file);
+
+    void HandleUnaryOperator(UnaryOperatorNode &uonode, std::ofstream & file);
+
+    void NotRegister(const std::string & reg, std::ofstream &file);
 };
 
 

@@ -1,16 +1,12 @@
 #include "ConstantNode.hpp"
 using std::string;
 
-ConstantNode::ConstantNode(int toInit) {
-    _val = new int(toInit);
-    _stype = SyntaxType::Constant;
-}
+ConstantNode::ConstantNode(int toInit): ExpressionNode(SyntaxType::Constant), _val(new int(toInit)) {}
+ConstantNode::ConstantNode() : ExpressionNode(SyntaxType::Constant), _val(nullptr) {}
 
 int & ConstantNode::Value() const {
     return *_val;
 }
-
-ConstantNode::ConstantNode() : _val(nullptr) { }
 
 void ConstantNode::Value(int i) {
     *_val = i;

@@ -7,10 +7,6 @@ class ReturnNode : public StatementNode {
 public:
     explicit ReturnNode(ExpressionNode * exp);
     std::string PrettyPrint() override;
-
-    SyntaxType Type() const override {
-        return SyntaxType::Return;
-    }
 };
 
 #endif //COMPILERPROJECT_RETURNNODE_HPP

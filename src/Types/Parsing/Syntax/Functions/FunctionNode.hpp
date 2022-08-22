@@ -7,15 +7,12 @@
 class FunctionNode : public SyntaxNode {
 public:
 
+    FunctionNode();
     explicit FunctionNode(std::string toInit);
     std::string & Name() const;
     std::string PrettyPrint() override;
     Parameters & Params() const;
     BodyNode & Body() const;
-
-    SyntaxType Type() const override {
-        return SyntaxType::Function;
-    }
 
 private:
     std::string * _name;

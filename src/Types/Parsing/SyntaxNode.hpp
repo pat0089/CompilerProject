@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Constant};
+enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Constant, UnaryOperator };
 
 class SyntaxNode {
 
@@ -11,6 +11,7 @@ public:
 
     SyntaxNode();
     SyntaxNode(const SyntaxNode & node);
+    SyntaxNode(SyntaxType stype);
 
     SyntaxNode & operator[](int i);
     SyntaxNode & Parent() const;
@@ -34,7 +35,7 @@ public:
     friend std::ostream & operator << (std::ostream & os, SyntaxNode & rhs);
     virtual std::string PrettyPrint() = 0;
 
-    virtual SyntaxType Type() const = 0;
+    SyntaxType Type() const;
 
 protected:
 

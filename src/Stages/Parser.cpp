@@ -1,6 +1,6 @@
 #include "Parser.hpp"
 #include "../Types/Lexing/Tokens.hpp"
-
+#include <sstream>
 using std::cerr;
 using std::endl;
 
@@ -65,10 +65,9 @@ StatementNode * Parser::ParseStatement() {
     //this will eventually support different types of statements
     TokenList * context = _curList;
     _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Semicolon));
-    (!IsNextToken(TokenType::Keyword)) ? Fail(TokenType::Keyword) : PopFront();
 
-    //peek and error check for expression
-    (!IsNextToken(TokenType::Literal)) ? Fail(TokenType::Literal) : PopFront();
+    //generate return statement
+    (!IsNextToken(TokenType::Keyword)) ? Fail(TokenType::Keyword) : PopFront();
     auto newReturn = new ReturnNode(ParseExpression());
 
     //DONT FORGET THE SEMICOLON
@@ -79,10 +78,26 @@ StatementNode * Parser::ParseStatement() {
 }
 
 ExpressionNode * Parser::ParseExpression() {
-    //Token * integerConstant = List().SeekToNextLiteral();
-    int realVal = atoi(_lastParsed->GetRaw().c_str());
-    //initialize constant value node
-    return new ConstantNode(realVal);
+    if (!IsNextToken(TokenType::Literal) && !IsNextToken(TokenType::Symbol)) {
+        Fail("Expected Literal or Symbol for Expression!");
+        return nullptr;
+    }
+
+    if (IsNextToken(TokenType::Literal)) {
+        PopFront();
+        //initialize constant value node
+        return new ConstantNode(std::stoi(_lastParsed->GetRaw()));
+    }
+    //otherwise do the recursive call for (unary) operators
+    if (IsNextToken(TokenType::Symbol)) {
+        if (IsNextToken(SymbolType::Exclaimation) ||
+            IsNextToken(SymbolType::Tilde) ||
+            IsNextToken(SymbolType::Minus)) {
+            PopFront();
+            return new UnaryOperatorNode(GetSymbolType(_lastParsed), ParseExpression());;
+        }
+    }
+    return nullptr;
 }
 
 FunctionNode * Parser::ParseFunction() {
@@ -121,8 +136,6 @@ BodyNode * Parser::ParseBody() {
 ParameterNode * Parser::ParseParameter() {
     //add code to parse the arguments of functions
     //Fail();
-
-
     return new ParameterNode();
 }
 
@@ -130,24 +143,64 @@ TokenList &Parser::List() {
     return *_curList;
 }
 
-bool Parser::IsNextToken(TokenType type) {
+bool Parser::IsTokenType(TokenType type, Token * t) const {
+    return t->Type() == type;
+}
+
+bool Parser::IsTokenType(SymbolType stype, Token * t) const {
+    if (IsTokenType(TokenType::Symbol, t)) {
+        auto temp = (Symbol *) t;
+        return temp->SymType() == stype;
+    }
+    return false;
+}
+
+bool Parser::IsTokenType(KeywordType ktype, Token * t) const {
+    if (IsTokenType(TokenType::Keyword, t)) {
+        auto temp = (Keyword *) t;
+        return temp->KeyType() == ktype;
+    }
+    return false;
+}
+
+bool Parser::IsPrevToken(TokenType type) const {
+    return _lastParsed->Type() == type;
+}
+
+bool Parser::IsPrevToken(SymbolType stype) const {
+    return IsTokenType(stype, _lastParsed);
+}
+
+bool Parser::IsPrevToken(KeywordType ktype) const {
+    return IsTokenType(ktype, _lastParsed);
+}
+
+bool Parser::IsNextToken(TokenType type) const {
     return _curList->PeekType() == type;
 }
 
-bool Parser::IsNextToken(SymbolType stype) {
-    if (IsNextToken(TokenType::Symbol)) {
-        auto symToCheck = (Symbol *)(_curList->Front());
-        return symToCheck->SymType() == stype;
-    }
-    return false;
+bool Parser::IsNextToken(SymbolType stype) const {
+    return IsTokenType(stype, _curList->Front());
 }
 
-bool Parser::IsNextToken(KeywordType ktype) {
-    if (IsNextToken(TokenType::Keyword)) {
-        auto keyToCheck = (Keyword *)(_curList->Front());
-        return keyToCheck->KeyType() == ktype;
+bool Parser::IsNextToken(KeywordType ktype) const {
+    return IsTokenType(ktype, _curList->Front());
+}
+
+SymbolType Parser::GetSymbolType(Token *t) const {
+    if (IsTokenType(TokenType::Symbol, t)) {
+        auto temp = (Symbol *)t;
+        return temp->SymType();
     }
-    return false;
+    return SymbolType::None;
+}
+
+KeywordType Parser::GetKeywordType(Token *t) const {
+    if (IsTokenType(TokenType::Keyword, t)) {
+        auto temp = (Keyword *)t;
+        return temp->KeyType();
+    }
+    return KeywordType::None;
 }
 
 void Parser::PopFront() {

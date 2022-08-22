@@ -4,10 +4,7 @@
 
 class Parameters : public SyntaxNode {
 public:
-
-    SyntaxType Type() const override {
-        return SyntaxType::Statement;
-    }
+    Parameters();
 
 private:
 

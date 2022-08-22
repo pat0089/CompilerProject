@@ -3,6 +3,7 @@ using std::string;
 
 ProgramNode::ProgramNode(FunctionNode * main) {
     _main = main;
+    _stype = SyntaxType::Program;
     Add(main);
 }
 

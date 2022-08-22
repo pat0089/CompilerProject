@@ -28,7 +28,7 @@ set(SOURCE_FILES
         src/Types/Lexing/Tokens/Literal.cpp
         src/Types/Lexing/Tokens/Identifier.cpp
         src/Stages/CodeGenerator.cpp
-        )
+        src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.cpp src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.hpp)
 
 set(HEADER_FILES
         src/Types/Lexing/Tokens/Token.hpp

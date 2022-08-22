@@ -5,9 +5,7 @@
 class ParameterNode : public SyntaxNode {
 
 public:
-    SyntaxType Type() const override {
-        return SyntaxType::Parameters;
-    }
+    ParameterNode();
 
 private:
 

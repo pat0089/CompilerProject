@@ -48,9 +48,20 @@ private:
     void PopFront();
     Token * PeekFront();
 
-    bool IsNextToken(TokenType type);
-    bool IsNextToken(SymbolType stype);
-    bool IsNextToken(KeywordType ktype);
+    bool IsPrevToken(TokenType type) const;
+    bool IsPrevToken(SymbolType stype) const;
+    bool IsPrevToken(KeywordType ktype) const;
+
+    bool IsNextToken(TokenType type) const;
+    bool IsNextToken(SymbolType stype) const;
+    bool IsNextToken(KeywordType ktype) const;
+
+    bool IsTokenType(TokenType type, Token * t) const;
+    bool IsTokenType(SymbolType stype, Token * t) const;
+    bool IsTokenType(KeywordType ktype, Token * t) const;
+
+    SymbolType GetSymbolType(Token * t) const;
+    KeywordType GetKeywordType(Token * t) const;
 
     static bool _verified;
 };

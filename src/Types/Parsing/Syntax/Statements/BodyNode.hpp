@@ -6,9 +6,7 @@
 class BodyNode : public SyntaxNode {
 public:
 
-    SyntaxType Type() const override {
-        return SyntaxType::Body;
-    }
+    BodyNode();
 
 private:
 

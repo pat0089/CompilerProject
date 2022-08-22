@@ -18,14 +18,17 @@ int main(int argc, char * argv[]) {
     std::ifstream fin(fname);
     Compiler.Lex(fin);
     //cout << "Split by tokens:" << endl;
-    //cout << Compiler.GetLexer();    cout << endl << "********************" << endl;
+    //
+    //cout << Compiler.GetLexer();
+    //
+    // cout << endl << "********************" << endl;
 
     Compiler.Parse();
     //cout << Compiler.GetAST();
 
     auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
 
-    Compiler.Generate(fnameWithoutFS + ".s");
+    Compiler.Generate(fnameWithoutFS);
 
     std::system(std::string("gcc -c " + fnameWithoutFS + ".s -o" + fnameWithoutFS + ".o").c_str());
     std::system(std::string("gcc " + fnameWithoutFS + ".o -o" + fnameWithoutFS).c_str());

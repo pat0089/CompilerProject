@@ -1,10 +1,12 @@
 #include "SyntaxNode.hpp"
 #include <type_traits>
 //default constructor, no children or parent
-SyntaxNode::SyntaxNode() : _childCount(0), _parent(nullptr), _children(nullptr) { }
+SyntaxNode::SyntaxNode() : _childCount(0), _parent(nullptr), _children(nullptr), _stype(SyntaxType::None) { }
+
+SyntaxNode::SyntaxNode(SyntaxType stype) : _childCount(0), _parent(nullptr), _children(nullptr), _stype(stype) {}
 
 //copy the parent of and make a new list of the same children as in astNode
-SyntaxNode::SyntaxNode(const SyntaxNode &node) : _childCount(node._childCount), _parent(node._parent) {
+SyntaxNode::SyntaxNode(const SyntaxNode &node) : _childCount(node._childCount), _parent(node._parent), _stype(node._stype) {
     _children = new SyntaxNode* [_childCount];
     for (int i = 0; i < _childCount; i++) {
         _children[i] = node._children[i];
@@ -15,6 +17,7 @@ void SyntaxNode::Parent(SyntaxNode *parent) {
     _parent = parent;
 }
 
+//copy over an array of children
 void SyntaxNode::Add(SyntaxNode **children, int childCount) {
     //copy over child reference array
     SyntaxNode ** oldChildren = new SyntaxNode* [_childCount];
@@ -144,4 +147,8 @@ std::ostream &operator<<(std::ostream &os, SyntaxNode &rhs) {
 
 int SyntaxNode::ChildCount() const {
     return _childCount;
+}
+
+SyntaxType SyntaxNode::Type() const {
+    return _stype;
 }

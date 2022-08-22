@@ -62,3 +62,56 @@ SymbolType Symbol::GetSymType(const string & rawString) {
 SymbolType Symbol::SymType() const {
     return _symType;
 }
+
+std::string Symbol::GetString(SymbolType stype) {
+    switch (stype) {
+        case SymbolType::Semicolon:
+            break;
+        case SymbolType::Colon:
+            break;
+        case SymbolType::Open_Parenthesis:
+            break;
+        case SymbolType::Close_Parenthesis:
+            break;
+        case SymbolType::Open_Brace:
+            break;
+        case SymbolType::Close_Brace:
+            break;
+        case SymbolType::Open_Bracket:
+            break;
+        case SymbolType::Close_Bracket:
+            break;
+        case SymbolType::Open_Chevron:
+            break;
+        case SymbolType::Close_Chevron:
+            break;
+        case SymbolType::Period:
+            break;
+        case SymbolType::Comma:
+            break;
+        case SymbolType::Equals:
+            break;
+        case SymbolType::Plus:
+            break;
+        case SymbolType::Minus:
+            return "-";
+        case SymbolType::ForwardSlash:
+            break;
+        case SymbolType::Asterisk:
+            break;
+        case SymbolType::BackSlash:
+            break;
+        case SymbolType::And:
+            break;
+        case SymbolType::Hashmark:
+            return "#";
+        case SymbolType::Exclaimation:
+            return "!";
+        case SymbolType::Tilde:
+            return "~";
+        case SymbolType::None:
+        default:
+            return "";
+    }
+    return "";
+}

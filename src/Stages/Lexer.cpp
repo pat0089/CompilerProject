@@ -9,7 +9,7 @@ using std::regex;
 const regex Lexer::isKeyword = regex("int|char|return");
 const regex Lexer::isIdentifier = regex("[a-zA-Z]+");
 const regex Lexer::isLiteral = regex("[0-9]+");
-const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\;|\+|\-|\*|\/|\=)");
+const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\;|\+|\-|\*|\/|\=|\~|\!)");
 
 void Lexer::Lex(istream & is) {
     is >> *_tokens;
