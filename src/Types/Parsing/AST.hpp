@@ -7,14 +7,16 @@ using std::string;
 class AST {
 public:
     //returns a reference to the ProgramNode of the AST
-    ProgramNode & Program() const;
+    ProgramNode * Program() const;
 
     void Program(ProgramNode * main);
     friend std::ostream & operator << (std::ostream & os, const AST & ast);
 
+
 private:
     SyntaxNode * _head = nullptr;
-
+    void recursiveOutput(const SyntaxNode * snode, std::ostream & os) const;
+    void outputNode(const SyntaxNode * snode, std::ostream & os) const;
 };
 
 

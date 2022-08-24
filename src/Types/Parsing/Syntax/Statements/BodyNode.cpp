@@ -2,7 +2,7 @@
 using std::string;
 
 string BodyNode::PrettyPrint() {
-    return string("Body:");
+    return "Body:";
 }
 
 BodyNode::BodyNode() : SyntaxNode(SyntaxType::Body) {}

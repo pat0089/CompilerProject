@@ -8,20 +8,20 @@ void CodeGenerator::Generate(const AST &ast, const string & fname) {
     fout.close();
 }
 
-void CodeGenerator::Generate(SyntaxNode & snode, std::ofstream & file) {
-    if (snode.Type() == SyntaxType::Function)
-        WriteFunction(dynamic_cast<FunctionNode &>(snode), file);
-    for (int i = 0; i < snode.ChildCount(); i++) {
-        Generate(snode[i], file);
+void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
+    if (snode->Type() == SyntaxType::Function)
+        WriteFunction(*(FunctionNode *)(snode), file);
+    for (int i = 0; i < snode->ChildCount(); i++) {
+        Generate(snode->Child(i), file);
     }
     //std::cout << snode << "\n";
 
-    if (snode.Type() == SyntaxType::Return)
-        WriteReturn(dynamic_cast<ReturnNode &>(snode), file);
-    if (snode.Type() == SyntaxType::UnaryOperator)
-        HandleUnaryOperator(dynamic_cast<UnaryOperatorNode &>(snode), file);
-    if (snode.Type() == SyntaxType::Constant)
-        WriteToRegister("eax", dynamic_cast<ConstantNode &>(snode), file);
+    if (snode->Type() == SyntaxType::Return)
+        WriteReturn(*(ReturnNode *)(snode), file);
+    if (snode->Type() == SyntaxType::UnaryOperator)
+        HandleUnaryOperator(*(UnaryOperatorNode *)(snode), file);
+    if (snode->Type() == SyntaxType::Constant)
+        WriteToRegister("eax", *(ConstantNode *)(snode), file);
 }
 
 void CodeGenerator::WriteFunction(FunctionNode & fnode, std::ofstream & file) {

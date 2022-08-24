@@ -1,5 +1,6 @@
 #include "Parser.hpp"
 #include "../Types/Lexing/Tokens.hpp"
+#include "../Types/Parsing/Syntax/Expressions/BinaryOperatorNode.hpp"
 #include <sstream>
 using std::cerr;
 using std::endl;
@@ -78,26 +79,47 @@ StatementNode * Parser::ParseStatement() {
 }
 
 ExpressionNode * Parser::ParseExpression() {
-    if (!IsNextToken(TokenType::Literal) && !IsNextToken(TokenType::Symbol)) {
-        Fail("Expected Literal or Symbol for Expression!");
-        return nullptr;
+    ExpressionNode * term = ParseTerm();
+
+    while (IsNextToken(SymbolType::Plus) || IsNextToken(SymbolType::Minus)) {
+        SymbolType op = GetSymbolType(Front());
+        auto next_term = ParseTerm();
+        term = new BinaryOperatorNode(op, term, next_term);
     }
 
-    if (IsNextToken(TokenType::Literal)) {
-        PopFront();
-        //initialize constant value node
-        return new ConstantNode(std::stoi(_lastParsed->GetRaw()));
+    return term;
+}
+
+TermNode *Parser::ParseTerm() {
+    TermNode * factor = ParseFactor();
+
+    while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash)) {
+        SymbolType op = GetSymbolType(Front());
+        auto next_factor = ParseFactor();
+        factor = (TermNode *)(new BinaryOperatorNode(op, factor, next_factor));
     }
-    //otherwise do the recursive call for (unary) operators
-    if (IsNextToken(TokenType::Symbol)) {
-        if (IsNextToken(SymbolType::Exclaimation) ||
-            IsNextToken(SymbolType::Tilde) ||
-            IsNextToken(SymbolType::Minus)) {
-            PopFront();
-            return new UnaryOperatorNode(GetSymbolType(_lastParsed), ParseExpression());;
-        }
+
+    return factor;
+}
+
+FactorNode *Parser::ParseFactor() {
+    auto next = Front();
+    if (IsTokenType(SymbolType::Open_Parenthesis, next)) {
+        auto exp = (FactorNode *)ParseExpression();
+        if (!IsNextToken(SymbolType::Close_Parenthesis)) Fail(SymbolType::Close_Parenthesis);
+        else return exp;
+    } else if (IsUnaryOperation(next)) {
+        SymbolType stype = GetSymbolType(next);
+        FactorNode * factor = ParseFactor();
+        auto temp = new UnaryOperatorNode(stype, (ExpressionNode *)factor);
+        return (FactorNode *)temp;
+    } else if (IsTokenType(TokenType::Literal, next)) {
+        auto temp = new ConstantNode((Literal *)next);
+        return (FactorNode *)temp;
+    } else {
+        Fail("Tried to parse Factor and Failed!!!");
+        return nullptr;
     }
-    return nullptr;
 }
 
 FunctionNode * Parser::ParseFunction() {
@@ -320,4 +342,14 @@ bool Parser::_verified = true;
 
 bool Parser::Verify() {
     return _verified;
+}
+
+Token *Parser::Front() {
+    auto temp = PeekFront();
+    PopFront();
+    return temp;
+}
+
+bool Parser::IsUnaryOperation(Token * t) {
+    return (IsTokenType(SymbolType::Tilde, t) || IsTokenType(SymbolType::Minus, t) || IsTokenType(SymbolType::Exclaimation, t));
 }

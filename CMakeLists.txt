@@ -28,7 +28,10 @@ set(SOURCE_FILES
         src/Types/Lexing/Tokens/Literal.cpp
         src/Types/Lexing/Tokens/Identifier.cpp
         src/Stages/CodeGenerator.cpp
-        src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.cpp src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.hpp)
+        src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.cpp
+        src/Types/Parsing/Syntax/Expressions/TermNode.cpp
+        src/Types/Parsing/Syntax/Expressions/FactorNode.cpp
+        src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.cpp src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.hpp)
 
 set(HEADER_FILES
         src/Types/Lexing/Tokens/Token.hpp
@@ -52,6 +55,9 @@ set(HEADER_FILES
         src/Types/Lexing/Tokens/Literal.hpp
         src/Types/Lexing/Tokens/Identifier.hpp
         src/Stages/CodeGenerator.hpp
+        src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.hpp
+        src/Types/Parsing/Syntax/Expressions/TermNode.hpp
+        src/Types/Parsing/Syntax/Expressions/FactorNode.hpp
         )
 
 add_executable(CompilerProject ${SOURCE_FILES})

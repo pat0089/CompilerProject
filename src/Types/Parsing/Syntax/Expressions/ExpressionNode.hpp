@@ -6,7 +6,7 @@ class ExpressionNode : public SyntaxNode {
 public:
 
     ExpressionNode();
-    ExpressionNode(SyntaxType stype);
+    explicit ExpressionNode(SyntaxType stype);
 
 };
 

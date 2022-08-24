@@ -12,7 +12,7 @@ public:
 
 private:
 
-    void Generate(SyntaxNode & snode, std::ofstream & file);
+    void Generate(SyntaxNode * snode, std::ofstream & file);
 
     void WriteFunction(FunctionNode & fnode, std::ofstream & file);
 
