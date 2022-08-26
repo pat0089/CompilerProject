@@ -106,8 +106,12 @@ FactorNode *Parser::ParseFactor() {
     auto next = Front();
     if (IsTokenType(SymbolType::Open_Parenthesis, next)) {
         auto exp = (FactorNode *)ParseExpression();
-        if (!IsNextToken(SymbolType::Close_Parenthesis)) Fail(SymbolType::Close_Parenthesis);
-        else return exp;
+        if (!IsNextToken(SymbolType::Close_Parenthesis)) {
+            Fail(SymbolType::Close_Parenthesis);
+        } else {
+            PopFront();
+            return exp;
+        }
     } else if (IsUnaryOperation(next)) {
         SymbolType stype = GetSymbolType(next);
         FactorNode * factor = ParseFactor();

@@ -30,8 +30,7 @@ int main(int argc, char * argv[]) {
 
     Compiler.Generate(fnameWithoutFS);
 
-    std::system(std::string("gcc -c " + fnameWithoutFS + ".s -o" + fnameWithoutFS + ".o").c_str());
-    std::system(std::string("gcc " + fnameWithoutFS + ".o -o" + fnameWithoutFS).c_str());
+    std::system(std::string("gcc -m32 " + fnameWithoutFS + ".s -o " + fnameWithoutFS).c_str());
 
     return 0;
 }

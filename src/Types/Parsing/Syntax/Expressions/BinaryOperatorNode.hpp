@@ -12,7 +12,7 @@ public:
     BinaryOperatorNode();
     BinaryOperatorNode(SymbolType stype, ExpressionNode * t1, ExpressionNode * t2);
 
-    SymbolType GetSymbolType() const;
+    SymbolType GetOperatorType() const;
 
 private:
 
