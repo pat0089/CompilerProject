@@ -1,8 +1,21 @@
 #ifndef COMPILERPROJECT_PARSER_HPP
 #define COMPILERPROJECT_PARSER_HPP
+#include <exception>
 #include "../Types/Parsing/AST.hpp"
 #include "../Types/Parsing/Syntax/ParsedNodes.hpp"
 #include "../Types/Lexing/TokenList.hpp"
+#include "../Types/Parsing/Syntax/Expressions/TermNode.hpp"
+#include "../Types/Parsing/Syntax/Expressions/FactorNode.hpp"
+
+class UnexpectedTokenException : public std::exception {
+public:
+    UnexpectedTokenException(const std::string & msg) : message("UnexpectedTokenException: " + msg) {}
+    const char * what() {
+        return message.c_str();
+    }
+private:
+    std::string message;
+};
 
 class Parser {
 public:
@@ -34,9 +47,13 @@ private:
     Parameters * ParseParameters();
     ParameterNode * ParseParameter();
 
+    //Running code parsers
     BodyNode * ParseBody();
     StatementNode * ParseStatement();
     ExpressionNode * ParseExpression();
+    TermNode * ParseTerm();
+    FactorNode * ParseFactor();
+
 
     static void Fail(bool hasMain = true);
     static void Fail(TokenType type);
@@ -47,6 +64,7 @@ private:
     TokenList & List();
     void PopFront();
     Token * PeekFront();
+    Token * Front();
 
     bool IsPrevToken(TokenType type) const;
     bool IsPrevToken(SymbolType stype) const;
@@ -63,7 +81,10 @@ private:
     SymbolType GetSymbolType(Token * t) const;
     KeywordType GetKeywordType(Token * t) const;
 
+    bool IsUnaryOperation(Token * t);
+
     static bool _verified;
+
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP

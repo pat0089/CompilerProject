@@ -1,5 +1,6 @@
 #include "Parser.hpp"
 #include "../Types/Lexing/Tokens.hpp"
+#include "../Types/Parsing/Syntax/Expressions/BinaryOperatorNode.hpp"
 #include <sstream>
 using std::cerr;
 using std::endl;
@@ -78,26 +79,51 @@ StatementNode * Parser::ParseStatement() {
 }
 
 ExpressionNode * Parser::ParseExpression() {
-    if (!IsNextToken(TokenType::Literal) && !IsNextToken(TokenType::Symbol)) {
-        Fail("Expected Literal or Symbol for Expression!");
-        return nullptr;
+    ExpressionNode * term = ParseTerm();
+
+    while (IsNextToken(SymbolType::Plus) || IsNextToken(SymbolType::Minus)) {
+        SymbolType op = GetSymbolType(Front());
+        auto next_term = ParseTerm();
+        term = new BinaryOperatorNode(op, term, next_term);
     }
 
-    if (IsNextToken(TokenType::Literal)) {
-        PopFront();
-        //initialize constant value node
-        return new ConstantNode(std::stoi(_lastParsed->GetRaw()));
+    return term;
+}
+
+TermNode *Parser::ParseTerm() {
+    TermNode * factor = ParseFactor();
+
+    while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash)) {
+        SymbolType op = GetSymbolType(Front());
+        auto next_factor = ParseFactor();
+        factor = (TermNode *)(new BinaryOperatorNode(op, factor, next_factor));
     }
-    //otherwise do the recursive call for (unary) operators
-    if (IsNextToken(TokenType::Symbol)) {
-        if (IsNextToken(SymbolType::Exclaimation) ||
-            IsNextToken(SymbolType::Tilde) ||
-            IsNextToken(SymbolType::Minus)) {
+
+    return factor;
+}
+
+FactorNode *Parser::ParseFactor() {
+    auto next = Front();
+    if (IsTokenType(SymbolType::Open_Parenthesis, next)) {
+        auto exp = (FactorNode *)ParseExpression();
+        if (!IsNextToken(SymbolType::Close_Parenthesis)) {
+            Fail(SymbolType::Close_Parenthesis);
+        } else {
             PopFront();
-            return new UnaryOperatorNode(GetSymbolType(_lastParsed), ParseExpression());;
+            return exp;
         }
+    } else if (IsUnaryOperation(next)) {
+        SymbolType stype = GetSymbolType(next);
+        FactorNode * factor = ParseFactor();
+        auto temp = new UnaryOperatorNode(stype, (ExpressionNode *)factor);
+        return (FactorNode *)temp;
+    } else if (IsTokenType(TokenType::Literal, next)) {
+        auto temp = new ConstantNode((Literal *)next);
+        return (FactorNode *)temp;
+    } else {
+        Fail("Tried to parse Factor and Failed!!!");
+        return nullptr;
     }
-    return nullptr;
 }
 
 FunctionNode * Parser::ParseFunction() {
@@ -213,85 +239,87 @@ Token *Parser::PeekFront() {
 
 //fail should output a bit more information now
 void Parser::Fail(bool hasMain) {
+    std::stringstream err;
     if (_verified) _verified = false;
     if (_lastParsed->Type() == TokenType::None) {
         cerr << "FAIL0!: Empty Token\n";
     } else if (!hasMain) {
         cerr << "FAIL1!: No \'main\' function found\n";
     } else {
-        cerr << "FAIL2!: Unexpected Token -> " << _lastParsed->GetRaw() << "\n\tExpected: ";
+        err << "FAIL2!: Unexpected Token -> " << _lastParsed->GetRaw() << "\n\tExpected: ";
         switch (_expectedType) {
             case TokenType::Symbol:
-                cerr << "Symbol \'";
+                err << "Symbol \'";
                 switch (_expectedSymbolType) {
                     case SymbolType::Semicolon:
-                        cerr << ";";
+                        err << ";";
                         break;
                     case SymbolType::Open_Parenthesis:
-                        cerr << "(";
+                        err << "(";
                         break;
                     case SymbolType::Close_Parenthesis:
-                        cerr << ")";
+                        err << ")";
                         break;
                     case SymbolType::Open_Bracket:
-                        cerr << "[";
+                        err << "[";
                         break;
                     case SymbolType::Close_Bracket:
-                        cerr << "]";
+                        err << "]";
                         break;
                     case SymbolType::Open_Brace:
-                        cerr << "{";
+                        err << "{";
                         break;
                     case SymbolType::Close_Brace:
-                        cerr << "}";
+                        err << "}";
                         break;
                     case SymbolType::Equals:
-                        cerr << "=";
+                        err << "=";
                         break;
                     case SymbolType::Comma:
-                        cerr << ",";
+                        err << ",";
                         break;
                     case SymbolType::Period:
-                        cerr << ".";
+                        err << ".";
                         break;
                     case SymbolType::Tilde:
-                        cerr << "~";
+                        err << "~";
                         break;
                     case SymbolType::Exclaimation:
-                        cerr << "!";
+                        err << "!";
                         break;
                     case SymbolType::Hashmark:
-                        cerr << "#";
+                        err << "#";
                         break;
                     case SymbolType::And:
-                        cerr << "&";
+                        err << "&";
                         break;
                     case SymbolType::Asterisk:
-                        cerr << "*";
+                        err << "*";
                         break;
                 }
-                cerr << "\'\n";
+                err << "\'\n";
                 break;
             case TokenType::Keyword:
-                cerr << "Keyword \"";
+                err << "Keyword \"";
                 switch (_expectedKeyType) {
                     case KeywordType::Int:
-                        cerr << "int";
+                        err << "int";
                         break;
                     case KeywordType::Return:
-                        cerr << "return";
+                        err << "return";
                         break;
                 }
-                cerr << "\"\n";
+                err << "\"\n";
                 break;
             case TokenType::Identifier:
-                cerr << "Identifier\n";
+                err << "Identifier\n";
                 break;
             case TokenType::Literal:
-                cerr << "Literal\n";
+                err << "Literal\n";
                 break;
         }
-        cerr << endl;
+        err << endl;
+        throw UnexpectedTokenException(err.str());
     }
 }
 
@@ -320,4 +348,14 @@ bool Parser::_verified = true;
 
 bool Parser::Verify() {
     return _verified;
+}
+
+Token *Parser::Front() {
+    auto temp = PeekFront();
+    PopFront();
+    return temp;
+}
+
+bool Parser::IsUnaryOperation(Token * t) {
+    return (IsTokenType(SymbolType::Tilde, t) || IsTokenType(SymbolType::Minus, t) || IsTokenType(SymbolType::Exclaimation, t));
 }

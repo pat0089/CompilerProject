@@ -7,7 +7,7 @@ using std::ostream;
 using std::regex;
 
 const regex Lexer::isKeyword = regex("int|char|return");
-const regex Lexer::isIdentifier = regex("[a-zA-Z]+");
+const regex Lexer::isIdentifier = regex("[_a-zA-Z][_a-zA-Z0-9]{0,30}");
 const regex Lexer::isLiteral = regex("[0-9]+");
 const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\;|\+|\-|\*|\/|\=|\~|\!)");
 
@@ -34,46 +34,42 @@ ostream &operator<<(ostream &os, const Lexer &lexer) {
 }
 
 string Lexer::LexNextToken(istream & is) {
+    string toTokenize, toTest;
     char cur;
-    char last = 0;
-    string curChar;
-    string toTokenize;
-    //algorithm:
-    //read in a character until we reach a symbol or a whitespace
-    //is symbol:
-    //      the string is empty, return the symbol itself
-    //      string to return isn't empty, then put back the character and return the current string
-    //is character:
-    //      if the character read is numeric and the last character was alphabetical (and vice versa),
-    //      put back the last character and return the string
-    //
-    //      else add the character to the string
-    while (is.get(cur)) {
-        if (isspace(cur)) {
-            if (last != 0) {
-                break;
-            }
-        } else {
-            curChar.push_back(cur);
-            if (regex_match(curChar, isSymbol)) {
-                if (toTokenize.empty()) {
-                    toTokenize = curChar;
-                } else {
-                    is.putback(cur);
-                }
-                break;
+
+    while (!isspace(is.peek()) && !is.eof()) {
+        //grab the next char and put it on the string
+        //also assign it to test for symbol
+        is.get(cur);
+        toTest = cur;
+        if (!isspace(cur)) toTokenize.push_back(cur);
+
+        //test if the token we're reading is a symbol character
+        if (std::regex_match(toTest, isSymbol)) {
+            //if the token isn't the only char we've read,
+            //  putback the token to be read on the next << call on the file
+            //else the token is the only char we've read,
+            //  then return it
+            //     either way, remember to remove the trailing whitespace
+            //     whenever we return a value so that the next time it's called
+            //     the function returns a non-empty string
+            if (toTokenize.length() > 1) {
+                is.putback(cur);
+                toTokenize.pop_back();
+                //get rid of trailing whitespace
+                while (isspace(is.peek()) && !is.eof()) { is.get(cur); }
+                return toTokenize;
             } else {
-                if (isalpha(cur) && isdigit(last) || isalpha(last) && isdigit(cur)) {
-                    is.putback(cur);
-                    break;
-                } else if (isalpha(cur) || isdigit(cur)) {
-                    toTokenize.push_back(cur);
-                }
+                //get rid of trailing whitespace
+                while (isspace(is.peek()) && !is.eof()) { is.get(cur); }
+                return toTokenize;
             }
-            last = cur;
-            curChar.erase();
         }
+
     }
+    //get rid of trailing whitespace
+    while (isspace(is.peek()) && !is.eof()) { is.get(cur); }
+
     return toTokenize;
 }
 

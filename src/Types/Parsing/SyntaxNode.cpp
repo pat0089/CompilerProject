@@ -132,8 +132,8 @@ bool SyntaxNode::operator==(const SyntaxNode &node) const {
     return false;
 }
 
-SyntaxNode & SyntaxNode::operator[](int i) {
-    return *_children[i];
+SyntaxNode * SyntaxNode::operator[](int i) {
+    return _children[i];
 }
 
 SyntaxNode & SyntaxNode::Parent() const {
@@ -151,4 +151,8 @@ int SyntaxNode::ChildCount() const {
 
 SyntaxType SyntaxNode::Type() const {
     return _stype;
+}
+
+SyntaxNode *SyntaxNode::Child(int i) const {
+    return i < _childCount ? _children[i] : nullptr;
 }

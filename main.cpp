@@ -23,15 +23,19 @@ int main(int argc, char * argv[]) {
     //
     // cout << endl << "********************" << endl;
 
-    Compiler.Parse();
+    try {
+        Compiler.Parse();
+    } catch (UnexpectedTokenException e) {
+        cerr << e.what();
+        exit(1);
+    }
     //cout << Compiler.GetAST();
 
     auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
 
     Compiler.Generate(fnameWithoutFS);
 
-    std::system(std::string("gcc -c " + fnameWithoutFS + ".s -o" + fnameWithoutFS + ".o").c_str());
-    std::system(std::string("gcc " + fnameWithoutFS + ".o -o" + fnameWithoutFS).c_str());
+    std::system(std::string("gcc -m32 " + fnameWithoutFS + ".s -o " + fnameWithoutFS).c_str());
 
     return 0;
 }

@@ -92,17 +92,17 @@ std::string Symbol::GetString(SymbolType stype) {
         case SymbolType::Equals:
             break;
         case SymbolType::Plus:
-            break;
+            return "+";
         case SymbolType::Minus:
             return "-";
         case SymbolType::ForwardSlash:
-            break;
+            return "/";
         case SymbolType::Asterisk:
-            break;
+            return "*";
         case SymbolType::BackSlash:
-            break;
+            return "\\";
         case SymbolType::And:
-            break;
+            return "&";
         case SymbolType::Hashmark:
             return "#";
         case SymbolType::Exclaimation:

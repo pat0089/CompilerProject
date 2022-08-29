@@ -13,4 +13,5 @@
 #include "Expressions/ExpressionNode.hpp"
 #include "Expressions/ConstantNode.hpp"
 #include "Expressions/UnaryOperatorNode.hpp"
+#include "Expressions/BinaryOperatorNode.hpp"
 #endif //COMPILERPROJECT_PARSEDNODES_HPP

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Constant, UnaryOperator };
+enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Term, Factor, Constant, UnaryOperator, BinaryOperator };
 
 class SyntaxNode {
 
@@ -11,10 +11,11 @@ public:
 
     SyntaxNode();
     SyntaxNode(const SyntaxNode & node);
-    SyntaxNode(SyntaxType stype);
+    explicit SyntaxNode(SyntaxType stype);
 
-    SyntaxNode & operator[](int i);
+    SyntaxNode * operator[](int i);
     SyntaxNode & Parent() const;
+    SyntaxNode * Child(int i) const;
 
     void Parent(SyntaxNode * parent);
 

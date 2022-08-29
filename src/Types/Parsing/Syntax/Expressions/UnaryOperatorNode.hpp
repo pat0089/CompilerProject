@@ -6,7 +6,7 @@
 class UnaryOperatorNode : public ExpressionNode {
 public:
 
-    explicit UnaryOperatorNode(SymbolType stype, ExpressionNode * exp);
+    UnaryOperatorNode(SymbolType stype, ExpressionNode * exp);
 
     SymbolType GetOperatorType() const;
 
