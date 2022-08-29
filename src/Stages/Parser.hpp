@@ -1,10 +1,21 @@
 #ifndef COMPILERPROJECT_PARSER_HPP
 #define COMPILERPROJECT_PARSER_HPP
+#include <exception>
 #include "../Types/Parsing/AST.hpp"
 #include "../Types/Parsing/Syntax/ParsedNodes.hpp"
 #include "../Types/Lexing/TokenList.hpp"
 #include "../Types/Parsing/Syntax/Expressions/TermNode.hpp"
 #include "../Types/Parsing/Syntax/Expressions/FactorNode.hpp"
+
+class UnexpectedTokenException : public std::exception {
+public:
+    UnexpectedTokenException(const std::string & msg) : message("UnexpectedTokenException: " + msg) {}
+    const char * what() {
+        return message.c_str();
+    }
+private:
+    std::string message;
+};
 
 class Parser {
 public:

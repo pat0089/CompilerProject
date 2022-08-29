@@ -23,7 +23,12 @@ int main(int argc, char * argv[]) {
     //
     // cout << endl << "********************" << endl;
 
-    Compiler.Parse();
+    try {
+        Compiler.Parse();
+    } catch (UnexpectedTokenException e) {
+        cerr << e.what();
+        exit(1);
+    }
     //cout << Compiler.GetAST();
 
     auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));

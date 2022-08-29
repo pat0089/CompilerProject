@@ -239,85 +239,87 @@ Token *Parser::PeekFront() {
 
 //fail should output a bit more information now
 void Parser::Fail(bool hasMain) {
+    std::stringstream err;
     if (_verified) _verified = false;
     if (_lastParsed->Type() == TokenType::None) {
         cerr << "FAIL0!: Empty Token\n";
     } else if (!hasMain) {
         cerr << "FAIL1!: No \'main\' function found\n";
     } else {
-        cerr << "FAIL2!: Unexpected Token -> " << _lastParsed->GetRaw() << "\n\tExpected: ";
+        err << "FAIL2!: Unexpected Token -> " << _lastParsed->GetRaw() << "\n\tExpected: ";
         switch (_expectedType) {
             case TokenType::Symbol:
-                cerr << "Symbol \'";
+                err << "Symbol \'";
                 switch (_expectedSymbolType) {
                     case SymbolType::Semicolon:
-                        cerr << ";";
+                        err << ";";
                         break;
                     case SymbolType::Open_Parenthesis:
-                        cerr << "(";
+                        err << "(";
                         break;
                     case SymbolType::Close_Parenthesis:
-                        cerr << ")";
+                        err << ")";
                         break;
                     case SymbolType::Open_Bracket:
-                        cerr << "[";
+                        err << "[";
                         break;
                     case SymbolType::Close_Bracket:
-                        cerr << "]";
+                        err << "]";
                         break;
                     case SymbolType::Open_Brace:
-                        cerr << "{";
+                        err << "{";
                         break;
                     case SymbolType::Close_Brace:
-                        cerr << "}";
+                        err << "}";
                         break;
                     case SymbolType::Equals:
-                        cerr << "=";
+                        err << "=";
                         break;
                     case SymbolType::Comma:
-                        cerr << ",";
+                        err << ",";
                         break;
                     case SymbolType::Period:
-                        cerr << ".";
+                        err << ".";
                         break;
                     case SymbolType::Tilde:
-                        cerr << "~";
+                        err << "~";
                         break;
                     case SymbolType::Exclaimation:
-                        cerr << "!";
+                        err << "!";
                         break;
                     case SymbolType::Hashmark:
-                        cerr << "#";
+                        err << "#";
                         break;
                     case SymbolType::And:
-                        cerr << "&";
+                        err << "&";
                         break;
                     case SymbolType::Asterisk:
-                        cerr << "*";
+                        err << "*";
                         break;
                 }
-                cerr << "\'\n";
+                err << "\'\n";
                 break;
             case TokenType::Keyword:
-                cerr << "Keyword \"";
+                err << "Keyword \"";
                 switch (_expectedKeyType) {
                     case KeywordType::Int:
-                        cerr << "int";
+                        err << "int";
                         break;
                     case KeywordType::Return:
-                        cerr << "return";
+                        err << "return";
                         break;
                 }
-                cerr << "\"\n";
+                err << "\"\n";
                 break;
             case TokenType::Identifier:
-                cerr << "Identifier\n";
+                err << "Identifier\n";
                 break;
             case TokenType::Literal:
-                cerr << "Literal\n";
+                err << "Literal\n";
                 break;
         }
-        cerr << endl;
+        err << endl;
+        throw UnexpectedTokenException(err.str());
     }
 }
 
