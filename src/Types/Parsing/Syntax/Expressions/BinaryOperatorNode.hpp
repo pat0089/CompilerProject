@@ -16,8 +16,6 @@ public:
     SymbolType GetOperatorType() const;
     SymbolType GetOperatorType2() const;
 
-    OperatorType GetOperator() override;
-
 private:
 
     SymbolType _stype = SymbolType::None;

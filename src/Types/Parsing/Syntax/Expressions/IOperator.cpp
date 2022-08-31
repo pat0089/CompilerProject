@@ -1,6 +1,6 @@
 #include "IOperator.hpp"
 
-OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2) {
+OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2, SyntaxType stype3) {
     switch (stype1) {
         case SymbolType::Open_Chevron:
             if (stype2 == SymbolType::None) return OperatorType::Less_Than;
@@ -17,7 +17,8 @@ OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2) {
         case SymbolType::Plus:
             return OperatorType::Addition;
         case SymbolType::Minus:
-            return OperatorType::Minus;
+            if (stype3 == SyntaxType::UnaryOperator) return OperatorType::Negation;
+            if (stype3 == SyntaxType::BinaryOperator) return OperatorType::Minus;
         case SymbolType::ForwardSlash:
             return OperatorType::Division;
         case SymbolType::Asterisk:
@@ -34,4 +35,8 @@ OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2) {
             return OperatorType::None;
     }
     return OperatorType::None;
+}
+
+OperatorType IOperator::GetOperator() {
+    return _otype;
 }

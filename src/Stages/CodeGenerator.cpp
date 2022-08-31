@@ -51,10 +51,7 @@ void CodeGenerator::NotRegister(const std::string & reg, std::ofstream &file) {
 
 void CodeGenerator::LogicalNegateRegister(const string &reg, std::ofstream &file) {
     file << "\tcmpl\t$0, %" << reg << "\n\tmovl\t$0, %" << reg << "\n";
-    //TODO: change this last statement to
-    // represent the lower bytes of the corresponding
-    // register
-    file << "\tsete\t%al\n";
+    file << "\tsete\t%" << reg[1] << "l\n";
 }
 
 void CodeGenerator::HandleUnaryOperator(UnaryOperatorNode &uonode, std::ofstream &file) {

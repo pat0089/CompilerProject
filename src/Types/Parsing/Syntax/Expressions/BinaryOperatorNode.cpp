@@ -9,7 +9,7 @@ std::string BinaryOperatorNode::PrettyPrint() {
 BinaryOperatorNode::BinaryOperatorNode(SymbolType stype, SymbolType stype2, ExpressionNode * t1, ExpressionNode * t2) : ExpressionNode(SyntaxType::BinaryOperator), _stype(stype), _stype2(stype2) {
     Add(t1);
     Add(t2);
-    _otype = IOperator::ConvertOperator(stype, stype2);
+    _otype = ConvertOperator(stype, stype2, SyntaxType::BinaryOperator);
 }
 
 SymbolType BinaryOperatorNode::GetOperatorType() const {
@@ -19,7 +19,3 @@ SymbolType BinaryOperatorNode::GetOperatorType() const {
 SymbolType BinaryOperatorNode::GetOperatorType2() const {
     return _stype2;
 }
-
-OperatorType BinaryOperatorNode::GetOperator() {
-    return _otype;
-};

@@ -11,8 +11,6 @@ public:
 
     SymbolType GetOperatorType() const;
 
-    OperatorType GetOperator() override;
-
 private:
     SymbolType _stype = SymbolType::None;
     std::string PrettyPrint() override;
