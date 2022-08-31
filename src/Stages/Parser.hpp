@@ -51,6 +51,11 @@ private:
     BodyNode * ParseBody();
     StatementNode * ParseStatement();
     ExpressionNode * ParseExpression();
+    ExpressionNode * ParseLogicalAndExpression();
+    ExpressionNode * ParseEqualityExpression();
+    ExpressionNode * ParseRelationalExpression();
+    //ExpressionNode * ParseLogicalOrExpression();
+    ExpressionNode * ParseAdditiveExpression();
     TermNode * ParseTerm();
     FactorNode * ParseFactor();
 
@@ -64,6 +69,7 @@ private:
     TokenList & List();
     void PopFront();
     Token * PeekFront();
+    void PutbackFront(Token * t);
     Token * Front();
 
     bool IsPrevToken(TokenType type) const;

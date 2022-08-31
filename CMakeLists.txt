@@ -31,7 +31,7 @@ set(SOURCE_FILES
         src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.cpp
         src/Types/Parsing/Syntax/Expressions/TermNode.cpp
         src/Types/Parsing/Syntax/Expressions/FactorNode.cpp
-        src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.cpp src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.hpp)
+        src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.cpp src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.hpp src/Types/Parsing/Syntax/Expressions/IOperator.cpp src/Types/Parsing/Syntax/Expressions/IOperator.hpp)
 
 set(HEADER_FILES
         src/Types/Lexing/Tokens/Token.hpp

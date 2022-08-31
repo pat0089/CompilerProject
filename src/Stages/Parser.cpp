@@ -1,6 +1,5 @@
 #include "Parser.hpp"
 #include "../Types/Lexing/Tokens.hpp"
-#include "../Types/Parsing/Syntax/Expressions/BinaryOperatorNode.hpp"
 #include <sstream>
 using std::cerr;
 using std::endl;
@@ -79,12 +78,68 @@ StatementNode * Parser::ParseStatement() {
 }
 
 ExpressionNode * Parser::ParseExpression() {
+    ExpressionNode * expr = ParseLogicalAndExpression();
+
+    while (IsNextToken(SymbolType::Vertical_Line)) {
+        SymbolType op = GetSymbolType(Front());
+        SymbolType op2 = SymbolType::None;
+        if (IsNextToken(SymbolType::Vertical_Line)) op2 = GetSymbolType(Front());
+        auto next_expr = ParseLogicalAndExpression();
+        expr = new BinaryOperatorNode(op, op, expr, next_expr);
+    }
+
+    return expr;
+}
+
+ExpressionNode *Parser::ParseLogicalAndExpression() {
+    ExpressionNode * logical_and_expr = ParseEqualityExpression();
+
+    while (IsNextToken(SymbolType::And)) {
+        SymbolType op = GetSymbolType(Front());
+        SymbolType op2 = SymbolType::None;
+        if (IsNextToken(SymbolType::And)) op2 = GetSymbolType(Front());
+        auto next_expr = ParseEqualityExpression();
+        logical_and_expr = new BinaryOperatorNode(op, op2, logical_and_expr, next_expr);
+    }
+
+    return logical_and_expr;
+}
+
+ExpressionNode *Parser::ParseEqualityExpression() {
+    ExpressionNode * equality_expr = ParseRelationalExpression();
+
+    while (IsNextToken(SymbolType::Equals) || IsNextToken(SymbolType::Exclaimation)) {
+        SymbolType op = GetSymbolType(Front());
+        SymbolType op2 = SymbolType::None;
+        if (IsNextToken(SymbolType::Equals)) op2 = GetSymbolType(Front());
+        auto next_expr = ParseRelationalExpression();
+        equality_expr = new BinaryOperatorNode(op, op2, equality_expr, next_expr);
+    }
+
+    return equality_expr;
+}
+
+ExpressionNode *Parser::ParseRelationalExpression() {
+    ExpressionNode * relational_expr = ParseAdditiveExpression();
+
+    while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
+        SymbolType op = GetSymbolType(Front());
+        SymbolType op2 = SymbolType::None;
+        if (IsNextToken(SymbolType::Equals)) op2 = GetSymbolType(Front());
+        auto next_expr = ParseAdditiveExpression();
+        relational_expr = new BinaryOperatorNode(op, op2, relational_expr, next_expr);
+    }
+
+    return relational_expr;
+}
+
+ExpressionNode *Parser::ParseAdditiveExpression() {
     ExpressionNode * term = ParseTerm();
 
     while (IsNextToken(SymbolType::Plus) || IsNextToken(SymbolType::Minus)) {
         SymbolType op = GetSymbolType(Front());
         auto next_term = ParseTerm();
-        term = new BinaryOperatorNode(op, term, next_term);
+        term = new BinaryOperatorNode(op, SymbolType::None, term, next_term);
     }
 
     return term;
@@ -96,7 +151,7 @@ TermNode *Parser::ParseTerm() {
     while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash)) {
         SymbolType op = GetSymbolType(Front());
         auto next_factor = ParseFactor();
-        factor = (TermNode *)(new BinaryOperatorNode(op, factor, next_factor));
+        factor = (TermNode *)(new BinaryOperatorNode(op, SymbolType::None, factor, next_factor));
     }
 
     return factor;
@@ -206,11 +261,11 @@ bool Parser::IsNextToken(TokenType type) const {
 }
 
 bool Parser::IsNextToken(SymbolType stype) const {
-    return IsTokenType(stype, _curList->Front());
+    return IsTokenType(stype, _curList->PeekFront());
 }
 
 bool Parser::IsNextToken(KeywordType ktype) const {
-    return IsTokenType(ktype, _curList->Front());
+    return IsTokenType(ktype, _curList->PeekFront());
 }
 
 SymbolType Parser::GetSymbolType(Token *t) const {
@@ -234,7 +289,7 @@ void Parser::PopFront() {
 }
 
 Token *Parser::PeekFront() {
-    return _curList->Front();
+    return _curList->PeekFront();
 }
 
 //fail should output a bit more information now

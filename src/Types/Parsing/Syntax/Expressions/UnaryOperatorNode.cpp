@@ -3,6 +3,7 @@ using std::string;
 
 UnaryOperatorNode::UnaryOperatorNode(SymbolType stype, ExpressionNode * exp) : ExpressionNode(SyntaxType::UnaryOperator), _stype(stype) {
     Add(exp);
+    _otype = IOperator::ConvertOperator(stype);
 }
 
 string UnaryOperatorNode::PrettyPrint() {
@@ -11,5 +12,9 @@ string UnaryOperatorNode::PrettyPrint() {
 
 SymbolType UnaryOperatorNode::GetOperatorType() const {
     return _stype;
+}
+
+OperatorType UnaryOperatorNode::GetOperator() {
+    return _otype;
 }
 

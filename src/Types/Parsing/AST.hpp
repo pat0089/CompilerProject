@@ -15,7 +15,7 @@ public:
 
 private:
     SyntaxNode * _head = nullptr;
-    void recursiveOutput(const SyntaxNode * snode, std::ostream & os) const;
+    void recursiveOutput(const SyntaxNode * snode, std::ostream & os, int layer) const;
     void outputNode(const SyntaxNode * snode, std::ostream & os) const;
 };
 
