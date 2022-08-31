@@ -24,10 +24,11 @@ public:
 
     //Used for parsing
     Token * PopFront();
+    void PutbackFront(Token * t);
 
     //get the type of the frontmost token
     TokenType PeekType() const;
-    Token * Front() const;
+    Token * PeekFront() const;
 
     //returns a reference to the next typed token in the list
     Token * SeekToNext(TokenType type, Token * from = nullptr);

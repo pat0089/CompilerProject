@@ -10,7 +10,8 @@ enum class SymbolType { None , Semicolon, Colon,
     Period, Comma, Equals,
     Plus, Minus, ForwardSlash,
     Asterisk, BackSlash, And,
-    Hashmark, Exclaimation, Tilde
+    Hashmark, Exclaimation, Tilde,
+    Vertical_Line
 };
 
 class Symbol : public Token {
