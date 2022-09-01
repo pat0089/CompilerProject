@@ -29,40 +29,15 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
 
 }
 
-void CodeGenerator::WriteFunction(FunctionNode & fnode, std::ofstream & file) {
-    file << ".globl " << fnode.Name() << "\n" << fnode.Name() << ":\n";
-}
-
-void CodeGenerator::WriteToRegister(const string &reg, ConstantNode & cnode, std::ofstream & file) {
-    file << "\tmovl\t$" << cnode.Value() << ", %" << reg << "\n";
-}
-
-void CodeGenerator::WriteReturn(std::ofstream & file) {
-    file << "\tret\n";
-}
-
-void CodeGenerator::NegateRegister(const string &reg, std::ofstream &file) {
-    file << "\tneg\t\t%" << reg << "\n";
-}
-
-void CodeGenerator::NotRegister(const std::string & reg, std::ofstream &file) {
-    file << "\tnot\t\t%" << reg << "\n";
-}
-
-void CodeGenerator::LogicalNegateRegister(const string &reg, std::ofstream &file) {
-    file << "\tcmpl\t$0, %" << reg << "\n\tmovl\t$0, %" << reg << "\n";
-    file << "\tsete\t%" << reg[1] << "l\n";
-}
-
 void CodeGenerator::HandleUnaryOperator(UnaryOperatorNode &uonode, std::ofstream &file) {
-    switch (uonode.GetOperatorType()) {
-        case SymbolType::Tilde:
-            NotRegister("eax", file);
+    switch (uonode.GetOperator()) {
+        case OperatorType::Bitwise_Complement:
+            BitwiseComplementRegister("eax", file);
             break;
-        case SymbolType::Minus:
+        case OperatorType::Negation:
             NegateRegister("eax", file);
             break;
-        case SymbolType::Exclaimation:
+        case OperatorType::Logical_Negation:
             LogicalNegateRegister("eax", file);
             break;
         default:
@@ -74,29 +49,88 @@ void CodeGenerator::HandleUnaryOperator(UnaryOperatorNode &uonode, std::ofstream
 void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std::ofstream & file) {
     //generate children in a specific order
     //separate from the recursive Generate call
-    Generate(bonode.Child(0), file);
-    PushRegisterToStack("eax", file);
-    Generate(bonode.Child(1), file);
-    PopRegisterFromStack("ecx", file);
+    string r0 = "eax";
+    string r1 = "ecx";
 
-    switch (bonode.GetOperatorType()) {
-        case SymbolType::Plus:
-            AddRegisters("eax", "ecx", file);
+    Generate(bonode.Child(0), file);
+    PushRegisterToStack(r0, file);
+    Generate(bonode.Child(1), file);
+    PopRegisterFromStack(r1, file);
+
+    switch (bonode.GetOperator()) {
+        case OperatorType::Addition:
+            AddRegisters(r0, r1, file);
             break;
-        case SymbolType::Minus:
-            SubtractRegisters("eax", "ecx", file);
+        case OperatorType::Minus:
+            SubtractRegisters(r0, r1, file);
             break;
-        case SymbolType::ForwardSlash:
-            DivideRegisters("eax", "ecx", file);
+        case OperatorType::Division:
+            DivideRegisters(r0, r1, file);
             break;
-        case SymbolType::Asterisk:
-            MultiplyRegisters("eax", "ecx", file);
+        case OperatorType::Multiplication:
+            MultiplyRegisters(r0, r1, file);
+            break;
+        case OperatorType::Equal:
+            CompareEqual(r0, r1, file);
+            break;
+        case OperatorType::Not_Equal:
+            CompareNotEqual(r0, r1, file);
+        default:
+            break;
+        case OperatorType::AND:
+            break;
+        case OperatorType::OR:
+            break;
+        case OperatorType::Less_Than:
+            CompareLessThan(r0, r1, file);
+            break;
+        case OperatorType::Less_Than_Or_Equal:
+            CompareLessThanOrEqual(r0, r1, file);
+            break;
+        case OperatorType::Greater_Than:
+            CompareGreaterThan(r0, r1, file);
+            break;
+        case OperatorType::Greater_Than_Or_Equal:
+            CompareGreaterThanOrEqual(r0, r1, file);
             break;
     }
 }
 
-void CodeGenerator::AddRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
-    file << "\taddl\t%" << reg2 << ", %"<< reg1 << "\n";
+void CodeGenerator::LogicalNegateRegister(const string &reg, std::ofstream &file) {
+    CompareWithZero(reg, file);
+    ZeroOutRegister(reg, file);
+    SetIfEqual(reg, file);
+}
+
+void CodeGenerator::SwapRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
+    CopyFromRegister(reg1, "edx", file);
+    CopyFromRegister(reg2, reg1, file);
+    CopyFromRegister("edx", reg2, file);
+}
+
+void CodeGenerator::CompareEqual(const string &reg1, const string &reg2, std::ofstream &file) {
+    CompareRegisters(reg1, reg2, file);
+    ZeroOutRegister(reg1, file);
+    SetIfEqual(reg1, file);
+}
+
+
+void CodeGenerator::CompareNotEqual(const string &reg1, const string &reg2, std::ofstream &file) {
+    CompareRegisters(reg1, reg2, file);
+    ZeroOutRegister(reg1, file);
+    SetIfNotEqual(reg1, file);
+}
+
+void CodeGenerator::ZeroOutRegister(const string &reg, std::ofstream &file) {
+    SetRegisterVal(reg, 0, file);
+}
+
+void CodeGenerator::CompareWithZero(const string &reg, std::ofstream &file) {
+    CompareRegisterVal(reg, 0, file);
+}
+
+void CodeGenerator::WriteToRegister(const string &reg, ConstantNode & cnode, std::ofstream & file) {
+    SetRegisterVal(reg, cnode.Value(), file);
 }
 
 void CodeGenerator::SubtractRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
@@ -110,6 +144,40 @@ void CodeGenerator::DivideRegisters(const string &reg1, const string &reg2, std:
     file << "\tidivl\t%" << reg2 << "\n";
 }
 
+
+void CodeGenerator::WriteFunction(FunctionNode & fnode, std::ofstream & file) {
+    file << ".globl " << fnode.Name() << "\n";
+    file << fnode.Name() << ":\n";
+}
+
+void CodeGenerator::AddRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
+    file << "\taddl\t%" << reg2 << ", %"<< reg1 << "\n";
+}
+
+void CodeGenerator::CompareRegisterVal(const string &reg, int val, std::ofstream &file) {
+    file << "\tcmpl\t$" << val << ", %" << reg << "\n";
+}
+
+void CodeGenerator::CompareRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
+    file << "\tcmpl\t%" << reg1 << ", %" << reg2 << "\n";
+}
+
+void CodeGenerator::SetRegisterVal(const string &reg, int val, std::ofstream &file) {
+    file << "\tmovl\t$" << val << ", %" << reg << "\n";
+}
+
+void CodeGenerator::SetIfGreaterThan(const string &reg, std::ofstream &file) {
+    file << "\tsetg\t%" << reg[1] << "l\n";
+}
+
+void CodeGenerator::SetIfEqual(const string &reg, std::ofstream &file) {
+    file << "\tsete\t%" << reg[1] << "l\n";
+}
+
+void CodeGenerator::CopyFromRegister(const string &reg1, const string &reg2, std::ofstream &file) {
+    file << "\tmovl\t%" << reg1 << ", %" << reg2 << "\n";
+}
+
 void CodeGenerator::MultiplyRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
     file << "\timul\t%" << reg2 << ", %"<< reg1 << "\n";
 }
@@ -119,13 +187,57 @@ void CodeGenerator::PushRegisterToStack(const string &reg, std::ofstream &file) 
 }
 
 void CodeGenerator::PopRegisterFromStack(const string &reg, std::ofstream &file) {
-    file << "\tpop\t%" << reg << "\n";
+    file << "\tpop\t\t%" << reg << "\n";
 }
 
-void CodeGenerator::SwapRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
-    file << "\tmovl\t%" << reg1 << ", %edx\n";
-    file << "\tmovl\t%" << reg2 << ", %" << reg1 << "\n";
-    file << "\tmovl\t%edx, %" << reg2 << "\n";
+void CodeGenerator::WriteReturn(std::ofstream & file) {
+    file << "\tret\n";
 }
 
+void CodeGenerator::NegateRegister(const string &reg, std::ofstream &file) {
+    file << "\tneg\t\t%" << reg << "\n";
+}
 
+void CodeGenerator::BitwiseComplementRegister(const std::string & reg, std::ofstream &file) {
+    file << "\tnot\t\t%" << reg << "\n";
+}
+
+void CodeGenerator::SetIfNotEqual(const string &reg, std::ofstream &file) {
+    file << "\tsetne\t%" << reg[1] << "l\n";
+}
+
+void CodeGenerator::SetIfLessThan(const string &reg, std::ofstream &file) {
+    file << "\tsetl\t%" << reg[1] << "l\n";
+}
+
+void CodeGenerator::SetIfLessThanOrEqual(const string &reg, std::ofstream &file) {
+    file << "\tsetle\t%" << reg[1] << "l\n";
+}
+
+void CodeGenerator::SetIfGreaterThanOrEqual(const string &reg, std::ofstream &file) {
+    file << "\tsetge\t%" << reg[1] << "l\n";
+}
+
+void CodeGenerator::CompareGreaterThan(const string &reg1, const string &reg2, std::ofstream &file) {
+    CompareRegisters(reg1, reg2, file);
+    ZeroOutRegister(reg1, file);
+    SetIfGreaterThan(reg1, file);
+}
+
+void CodeGenerator::CompareLessThan(const string &reg1, const string &reg2, std::ofstream &file) {
+    CompareRegisters(reg1, reg2, file);
+    ZeroOutRegister(reg1, file);
+    SetIfLessThan(reg1, file);
+}
+
+void CodeGenerator::CompareGreaterThanOrEqual(const string &reg1, const string &reg2, std::ofstream &file) {
+    CompareRegisters(reg1, reg2, file);
+    ZeroOutRegister(reg1, file);
+    SetIfGreaterThanOrEqual(reg1, file);
+}
+
+void CodeGenerator::CompareLessThanOrEqual(const string &reg1, const string &reg2, std::ofstream &file) {
+    CompareRegisters(reg1, reg2, file);
+    ZeroOutRegister(reg1, file);
+    SetIfLessThanOrEqual(reg1, file);
+}

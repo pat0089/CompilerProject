@@ -7,7 +7,7 @@ enum class OperatorType { None, Minus, Bitwise_Complement, Logical_Negation, Neg
 
 class IOperator {
 public:
-    OperatorType GetOperator();
+    OperatorType GetOperator() const;
 protected:
     OperatorType _otype;
     static OperatorType ConvertOperator(SymbolType stype1, SymbolType stype2 = SymbolType::None, SyntaxType stype3 = SyntaxType::UnaryOperator);
