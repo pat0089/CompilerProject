@@ -17,7 +17,7 @@ TokenType TokenList::PeekType() const {
     return _tokens->front()->Type();
 }
 
-Token * TokenList::Front() const {
+Token * TokenList::PeekFront() const {
     return _tokens->front();
 }
 
@@ -133,18 +133,15 @@ bool TokenList::match_all_braces() const {
 
         if (stype != SymbolType::Open_Brace &&
             stype != SymbolType::Open_Bracket &&
-            stype != SymbolType::Open_Chevron &&
             stype != SymbolType::Open_Parenthesis &&
             stype != SymbolType::Close_Brace &&
             stype != SymbolType::Close_Bracket &&
-            stype != SymbolType::Close_Chevron &&
             stype != SymbolType::Close_Parenthesis
                 )
             continue;
 
         if (stype == SymbolType::Open_Brace ||
             stype == SymbolType::Open_Bracket ||
-            stype == SymbolType::Open_Chevron ||
             stype == SymbolType::Open_Parenthesis
                 ) {
             st.push(stype);
@@ -153,10 +150,13 @@ bool TokenList::match_all_braces() const {
             if (st.empty()) return false;
             if (st.top() == SymbolType::Open_Brace && stype != SymbolType::Close_Brace) return false;
             if (st.top() == SymbolType::Open_Bracket && stype != SymbolType::Close_Bracket) return false;
-            if (st.top() == SymbolType::Open_Chevron && stype != SymbolType::Close_Chevron) return false;
             if (st.top() == SymbolType::Open_Parenthesis && stype != SymbolType::Close_Parenthesis) return false;
             st.pop();
         }
     }
     return st.empty();
+}
+
+void TokenList::PutbackFront(Token *t) {
+    _tokens->push_front(t);
 }

@@ -9,16 +9,18 @@ void AST::Program(ProgramNode * main) {
 }
 
 std::ostream &operator<<(std::ostream &os, const AST &ast) {
-    ast.recursiveOutput(ast._head, os);
+    ast.recursiveOutput(ast._head, os, 0);
     return os;
 }
 
-void AST::recursiveOutput(const SyntaxNode * snode, std::ostream &os) const {
+void AST::recursiveOutput(const SyntaxNode * snode, std::ostream &os, int layer) const {
+    if (!snode) return;
+    for (int i = 0; i < layer; i++) {
+        os << " ";
+    }
     outputNode(snode, os);
-    //os << snode << "\n";
     for (int i = 0; i < snode->ChildCount(); i++) {
-        for (int j = 0; j < i; j++) os << "\t";
-        recursiveOutput(snode->Child(i), os);
+        recursiveOutput(snode->Child(i), os, layer + 1);
     }
 }
 

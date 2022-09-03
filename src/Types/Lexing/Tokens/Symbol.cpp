@@ -55,6 +55,8 @@ SymbolType Symbol::GetSymType(const string & rawString) {
             return SymbolType::Minus;
         case '#':
             return SymbolType::Hashmark;
+        case '|':
+            return SymbolType::Vertical_Line;
     }
     return SymbolType::None;
 }
@@ -66,31 +68,31 @@ SymbolType Symbol::SymType() const {
 std::string Symbol::GetString(SymbolType stype) {
     switch (stype) {
         case SymbolType::Semicolon:
-            break;
+            return ";";
         case SymbolType::Colon:
-            break;
+            return ":";
         case SymbolType::Open_Parenthesis:
-            break;
+            return "(";
         case SymbolType::Close_Parenthesis:
-            break;
+            return ")";
         case SymbolType::Open_Brace:
-            break;
+            return "[";
         case SymbolType::Close_Brace:
-            break;
+            return "]";
         case SymbolType::Open_Bracket:
-            break;
+            return "}";
         case SymbolType::Close_Bracket:
-            break;
+            return "{";
         case SymbolType::Open_Chevron:
-            break;
+            return "<";
         case SymbolType::Close_Chevron:
-            break;
+            return ">";
         case SymbolType::Period:
-            break;
+            return ".";
         case SymbolType::Comma:
-            break;
+            return ",";
         case SymbolType::Equals:
-            break;
+            return "=";
         case SymbolType::Plus:
             return "+";
         case SymbolType::Minus:
@@ -109,9 +111,10 @@ std::string Symbol::GetString(SymbolType stype) {
             return "!";
         case SymbolType::Tilde:
             return "~";
+        case SymbolType::Vertical_Line:
+            return "|";
         case SymbolType::None:
         default:
             return "";
     }
-    return "";
 }

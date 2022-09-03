@@ -2,8 +2,9 @@
 #define COMPILERPROJECT_UNARYOPERATORNODE_HPP
 #include "../../../Lexing/Tokens/Symbol.hpp"
 #include "ExpressionNode.hpp"
+#include "IOperator.hpp"
 
-class UnaryOperatorNode : public ExpressionNode {
+class UnaryOperatorNode : public ExpressionNode, public IOperator {
 public:
 
     UnaryOperatorNode(SymbolType stype, ExpressionNode * exp);

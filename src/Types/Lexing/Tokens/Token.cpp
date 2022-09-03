@@ -21,8 +21,7 @@ string & Token::GetRaw() const {
 
 ostream &operator<<(ostream &os, const Token &token) {
     if (!token._readCharacters->empty()) {
-        os << "Token: " << token.GetRaw() << "\n";
-        os << "Type: " << token.TypeString() << "\n";
+        os << token.GetRaw();
     }
     return os;
 }

@@ -4,19 +4,22 @@
 
 #include "../../../Lexing/Tokens/Symbol.hpp"
 #include "ExpressionNode.hpp"
+#include "IOperator.hpp"
 #include "TermNode.hpp"
 
-class BinaryOperatorNode : public ExpressionNode {
+class BinaryOperatorNode : public ExpressionNode, public IOperator {
 public:
 
     BinaryOperatorNode();
-    BinaryOperatorNode(SymbolType stype, ExpressionNode * t1, ExpressionNode * t2);
+    BinaryOperatorNode(SymbolType stype, SymbolType stype2, ExpressionNode * t1, ExpressionNode * t2);
 
     SymbolType GetOperatorType() const;
+    SymbolType GetOperatorType2() const;
 
 private:
 
     SymbolType _stype = SymbolType::None;
+    SymbolType _stype2 = SymbolType::None;
     std::string PrettyPrint() override;
 
 };
