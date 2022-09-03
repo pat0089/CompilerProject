@@ -65,8 +65,14 @@ private:
     void SetRegisterVal(const std::string & reg, int val, std::ofstream & file);
     void CopyFromRegister(const std::string & reg1, const std::string & reg2, std::ofstream & file);
 
+    void JumpUnconditional(const std::string & label, std::ofstream & file);
+    void JumpIfEqual(const std::string & label, std::ofstream & file);
+    void JumpIfNotEqual(const std::string & label, std::ofstream & file);
 
-
+    //label functions
+    static int _labelCount;
+    std::string & CreateNewLabel();
+    void MarkLabel(const std::string & label, std::ofstream & file);
 
 };
 

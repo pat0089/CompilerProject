@@ -21,6 +21,8 @@ OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2, Sy
             return OperatorType::Multiplication;
         case SymbolType::And:
             if (stype2 == SymbolType::And) return OperatorType::AND;
+        case SymbolType::Vertical_Line:
+            if (stype2 == SymbolType::Vertical_Line) return OperatorType::OR;
         case SymbolType::Exclaimation:
             if (stype2 == SymbolType::None) return OperatorType::Logical_Negation;
             if (stype2 == SymbolType::Equals) return OperatorType::Not_Equal;

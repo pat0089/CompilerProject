@@ -1,6 +1,8 @@
 #include "CodeGenerator.hpp"
 #include <fstream>
 
+int CodeGenerator::_labelCount = 0;
+
 void CodeGenerator::Generate(const AST &ast, const string & fname) {
     std::ofstream fout;
     fout.open(fname);
@@ -51,6 +53,30 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
     //separate from the recursive Generate call
     string r0 = "eax";
     string r1 = "ecx";
+    auto op = bonode.GetOperator();
+    if (op == OperatorType::AND || op == OperatorType::OR) {
+        auto jump = CreateNewLabel();
+        auto end = CreateNewLabel();
+        Generate(bonode.Child(0), file);
+        CompareWithZero(r0, file);
+        if (op == OperatorType::AND) {
+            JumpIfNotEqual(jump, file);
+            JumpUnconditional(end, file);
+        } else {
+            JumpIfEqual(jump, file);
+            SetRegisterVal(r0, 1, file);
+            JumpUnconditional(end, file);
+        }
+        MarkLabel(jump, file);
+        Generate(bonode.Child(1), file);
+
+        CompareWithZero(r0, file);
+        ZeroOutRegister(r0, file);
+        SetIfNotEqual(r0, file);
+
+        MarkLabel(end, file);
+        return;
+    }
 
     Generate(bonode.Child(0), file);
     PushRegisterToStack(r0, file);
@@ -76,10 +102,6 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
         case OperatorType::Not_Equal:
             CompareNotEqual(r0, r1, file);
         default:
-            break;
-        case OperatorType::AND:
-            break;
-        case OperatorType::OR:
             break;
         case OperatorType::Less_Than:
             CompareLessThan(r0, r1, file);
@@ -147,7 +169,7 @@ void CodeGenerator::DivideRegisters(const string &reg1, const string &reg2, std:
 
 void CodeGenerator::WriteFunction(FunctionNode & fnode, std::ofstream & file) {
     file << ".globl " << fnode.Name() << "\n";
-    file << fnode.Name() << ":\n";
+    MarkLabel(fnode.Name(), file);
 }
 
 void CodeGenerator::AddRegisters(const string &reg1, const string &reg2, std::ofstream &file) {
@@ -240,4 +262,26 @@ void CodeGenerator::CompareLessThanOrEqual(const string &reg1, const string &reg
     CompareRegisters(reg1, reg2, file);
     ZeroOutRegister(reg1, file);
     SetIfLessThanOrEqual(reg1, file);
+}
+
+std::string &CodeGenerator::CreateNewLabel() {
+    auto temp = new std::string("_lab" + std::to_string(_labelCount));
+    _labelCount++;
+    return *temp;
+}
+
+void CodeGenerator::MarkLabel(const string &label, std::ofstream & file) {
+    file << label << ":\n";
+}
+
+void CodeGenerator::JumpIfEqual(const string &label, std::ofstream &file) {
+    file << "\tje\t\t" << label << "\n";
+}
+
+void CodeGenerator::JumpIfNotEqual(const string &label, std::ofstream &file) {
+    file << "\tjne\t\t" << label << "\n";
+}
+
+void CodeGenerator::JumpUnconditional(const string &label, std::ofstream &file) {
+    file << "\tjmp\t\t" << label << "\n";
 }
