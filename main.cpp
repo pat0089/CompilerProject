@@ -19,7 +19,7 @@ int main(int argc, char * argv[]) {
     Compiler.Lex(fin);
     //cout << "Split by tokens:" << endl;
     //
-    //cout << Compiler.GetLexer();
+    cout << Compiler.GetLexer();
     //
     // cout << endl << "********************" << endl;
 
