@@ -46,7 +46,6 @@ FunctionNode * Parser::ParseMainFunction() {
 }
 
 Parameters * Parser::ParseParameters() {
-    //_curList = new TokenList(List().SeekSymbolPop(SymbolType::Close_Parenthesis));
     _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Close_Parenthesis));
     (!IsNextToken(SymbolType::Open_Parenthesis)) ? Fail(SymbolType::Open_Parenthesis) : PopFront();
 
@@ -65,30 +64,61 @@ StatementNode * Parser::ParseStatement() {
     //this will eventually support different types of statements
     TokenList * context = _curList;
     _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Semicolon));
-
-    //generate return statement
-    (!IsNextToken(TokenType::Keyword)) ? Fail(TokenType::Keyword) : PopFront();
-    auto newReturn = new ReturnNode(ParseExpression());
+    StatementNode * toReturn;
+    if (IsNextToken(KeywordType::Return)) {
+        //generate return statement
+        PopFront();
+        toReturn = new ReturnNode(ParseExpression());
+    } else if (!IsNextToken(KeywordType::Int)) {
+        auto temp = ParseExpression();
+        toReturn = (StatementNode * )temp;
+    } else {
+        PopFront();
+        auto var_name = Front();
+        ExpressionNode * option = nullptr;
+        if (IsNextToken(SymbolType::Equals)) {
+            PopFront();
+            option = ParseExpression();
+        }
+        toReturn = new DeclarationNode(var_name->GetRaw(), option);
+    }
 
     //DONT FORGET THE SEMICOLON
     (!IsNextToken(SymbolType::Semicolon)) ? Fail(SymbolType::Semicolon) : PopFront();
 
     _curList = context;
-    return (StatementNode *)newReturn;
+    return toReturn;
 }
 
 ExpressionNode * Parser::ParseExpression() {
-    ExpressionNode * expr = ParseLogicalAndExpression();
+
+    if (IsNextToken(TokenType::Identifier)) {
+        auto var_name = Front();
+        if (IsNextToken(SymbolType::Equals)) {
+            //parse assignment
+            PopFront();
+            auto temp = new AssignmentNode(var_name->GetRaw(), ParseExpression());
+            return (ExpressionNode *)temp;
+        } else {
+            PutbackFront(var_name);
+        }
+    }
+    return ParseLogicalOrExpression();
+}
+
+
+ExpressionNode *Parser::ParseLogicalOrExpression() {
+    ExpressionNode * logical_or_expr = ParseLogicalAndExpression();
 
     while (IsNextToken(SymbolType::Vertical_Line)) {
         SymbolType op = GetSymbolType(Front());
         SymbolType op2 = SymbolType::None;
         if (IsNextToken(SymbolType::Vertical_Line)) op2 = GetSymbolType(Front());
         auto next_expr = ParseLogicalAndExpression();
-        expr = new BinaryOperatorNode(op, op, expr, next_expr);
+        logical_or_expr = new BinaryOperatorNode(op, op2, logical_or_expr, next_expr);
     }
 
-    return expr;
+    return logical_or_expr;
 }
 
 ExpressionNode *Parser::ParseLogicalAndExpression() {
@@ -158,8 +188,8 @@ TermNode *Parser::ParseTerm() {
 }
 
 FactorNode *Parser::ParseFactor() {
-    auto next = Front();
-    if (IsTokenType(SymbolType::Open_Parenthesis, next)) {
+    if (IsNextToken(SymbolType::Open_Parenthesis)) {
+        PopFront();
         auto exp = (FactorNode *)ParseExpression();
         if (!IsNextToken(SymbolType::Close_Parenthesis)) {
             Fail(SymbolType::Close_Parenthesis);
@@ -167,13 +197,17 @@ FactorNode *Parser::ParseFactor() {
             PopFront();
             return exp;
         }
-    } else if (IsUnaryOperation(next)) {
+    } else if (IsUnaryOperation(PeekFront())) {
+        auto next = Front();
         SymbolType stype = GetSymbolType(next);
         FactorNode * factor = ParseFactor();
         auto temp = new UnaryOperatorNode(stype, (ExpressionNode *)factor);
         return (FactorNode *)temp;
-    } else if (IsTokenType(TokenType::Literal, next)) {
-        auto temp = new ConstantNode((Literal *)next);
+    } else if (IsNextToken(TokenType::Literal)) {
+        auto temp = new ConstantNode((Literal *)Front());
+        return (FactorNode *)temp;
+    } else if (IsNextToken(TokenType::Identifier)) {
+        auto temp = new VariableNode(Front()->GetRaw());
         return (FactorNode *)temp;
     } else {
         Fail("Tried to parse Factor and Failed!!!");
@@ -266,6 +300,27 @@ bool Parser::IsNextToken(SymbolType stype) const {
 
 bool Parser::IsNextToken(KeywordType ktype) const {
     return IsTokenType(ktype, _curList->PeekFront());
+}
+
+bool Parser::IsNextTokenAfter(TokenType type) {
+    auto temp = Front();
+    bool flag = IsNextToken(type);
+    PutbackFront(temp);
+    return flag;
+}
+
+bool Parser::IsNextTokenAfter(SymbolType stype) {
+    auto temp = Front();
+    bool flag = IsNextToken(stype);
+    PutbackFront(temp);
+    return flag;
+}
+
+bool Parser::IsNextTokenAfter(KeywordType ktype) {
+    auto temp = Front();
+    bool flag = IsNextToken(ktype);
+    PutbackFront(temp);
+    return flag;
 }
 
 SymbolType Parser::GetSymbolType(Token *t) const {
@@ -413,4 +468,8 @@ Token *Parser::Front() {
 
 bool Parser::IsUnaryOperation(Token * t) {
     return (IsTokenType(SymbolType::Tilde, t) || IsTokenType(SymbolType::Minus, t) || IsTokenType(SymbolType::Exclaimation, t));
+}
+
+void Parser::PutbackFront(Token *t) {
+    _curList->PutbackFront(t);
 }

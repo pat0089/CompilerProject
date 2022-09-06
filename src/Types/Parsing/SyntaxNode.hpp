@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Term, Factor, Constant, UnaryOperator, BinaryOperator };
+enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Term, Factor, Constant, UnaryOperator, BinaryOperator, Declaration, Assignment, Variable };
 
 class SyntaxNode {
 

@@ -19,14 +19,14 @@ int main(int argc, char * argv[]) {
     Compiler.Lex(fin);
     //cout << "Split by tokens:" << endl;
     //
-    cout << Compiler.GetLexer();
+    //cout << Compiler.GetLexer();
     //
     // cout << endl << "********************" << endl;
 
 
     try {
         Compiler.Parse();
-        //cout << Compiler.GetAST();
+        cout << Compiler.GetAST();
     } catch (UnexpectedTokenException e) {
         cerr << e.what();
         exit(1);
