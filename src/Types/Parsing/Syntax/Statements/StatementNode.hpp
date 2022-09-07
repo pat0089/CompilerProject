@@ -6,7 +6,8 @@ class StatementNode : public SyntaxNode {
 public:
 
     StatementNode();
-    StatementNode(SyntaxType stype);
+    explicit StatementNode(SyntaxType stype);
+    std::string PrettyPrint() override;
 
 };
 

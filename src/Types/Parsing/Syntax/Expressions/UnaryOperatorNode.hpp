@@ -6,14 +6,12 @@
 
 class UnaryOperatorNode : public ExpressionNode, public IOperator {
 public:
-
     UnaryOperatorNode(SymbolType stype, ExpressionNode * exp);
-
     SymbolType GetOperatorType() const;
+    std::string PrettyPrint() override;
 
 private:
     SymbolType _stype = SymbolType::None;
-    std::string PrettyPrint() override;
 };
 
 

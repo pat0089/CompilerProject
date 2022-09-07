@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Term, Factor, Constant, UnaryOperator, BinaryOperator };
+enum class SyntaxType { None, Program, Function, Parameters, Body, Statement, Return, Expression, Term, Factor, Constant, UnaryOperator, BinaryOperator, Declaration, Assignment, Variable };
 
 class SyntaxNode {
 
@@ -28,6 +28,8 @@ public:
 
     int IndexOf(const SyntaxNode & child) const;
     int IndexOf(SyntaxNode * child) const;
+
+    bool ContainsChildType(SyntaxType stype) const;
 
     int ChildCount() const;
     bool operator==(const SyntaxNode & node) const;

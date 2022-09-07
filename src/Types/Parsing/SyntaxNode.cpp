@@ -156,3 +156,10 @@ SyntaxType SyntaxNode::Type() const {
 SyntaxNode *SyntaxNode::Child(int i) const {
     return i < _childCount ? _children[i] : nullptr;
 }
+
+bool SyntaxNode::ContainsChildType(SyntaxType stype) const {
+    for (int i = 0; i < _childCount; i++) {
+        if (_children[i]->Type() == stype) return true;
+    }
+    return false;
+}

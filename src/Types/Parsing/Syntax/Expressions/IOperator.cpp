@@ -9,6 +9,7 @@ OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2, Sy
             if (stype2 == SymbolType::None) return OperatorType::Greater_Than;
             if (stype2 == SymbolType::Equals) return OperatorType::Greater_Than_Or_Equal;
         case SymbolType::Equals:
+            if (stype2 == SymbolType::None) return OperatorType::Assignment;
             if (stype2 == SymbolType::Equals) return OperatorType::Equal;
         case SymbolType::Plus:
             return OperatorType::Addition;

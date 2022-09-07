@@ -1,6 +1,5 @@
 #ifndef COMPILERPROJECT_CODEGENERATOR_HPP
 #define COMPILERPROJECT_CODEGENERATOR_HPP
-#include <functional>
 #include "../Types/Parsing/AST.hpp"
 
 class CodeGenerator {
@@ -9,6 +8,7 @@ class CodeGenerator {
 public:
 
     void Generate(const AST & ast, const string & fname);
+    void FunctionMap(const std::unordered_map<std::string, FunctionInfoTable> & fmap);
 
 private:
 
@@ -17,6 +17,8 @@ private:
 
     //write higher programmatic constructs
     void WriteFunction(FunctionNode & fnode, std::ofstream & file);
+    void WriteFunctionPrologue(std::ofstream & file);
+    void WriteFunctionEpilogue(std::ofstream & file);
     void WriteReturn(std::ofstream & file);
 
     //register operations
@@ -65,6 +67,8 @@ private:
     void SetRegisterVal(const std::string & reg, int val, std::ofstream & file);
     void CopyFromRegister(const std::string & reg1, const std::string & reg2, std::ofstream & file);
 
+    void Movl(const std::string & statement, std::ofstream & file);
+
     void JumpUnconditional(const std::string & label, std::ofstream & file);
     void JumpIfEqual(const std::string & label, std::ofstream & file);
     void JumpIfNotEqual(const std::string & label, std::ofstream & file);
@@ -74,6 +78,13 @@ private:
     std::string & CreateNewLabel();
     void MarkLabel(const std::string & label, std::ofstream & file);
 
+    std::unordered_map<std::string, FunctionInfoTable> _functionMap;
+
+    void HandleDeclaration(const DeclarationNode & dnode, std::ofstream &file);
+    void HandleAssignment(const AssignmentNode & anode, std::ofstream &file);
+    void HandleVariable(const VariableNode & vnode, std::ofstream &file);
+
+    static std::string _curFunction;
 };
 
 

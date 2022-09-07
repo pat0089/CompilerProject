@@ -53,6 +53,15 @@ void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
         case SyntaxType::BinaryOperator:
             os << *(BinaryOperatorNode *)snode << "\n";
             break;
+        case SyntaxType::Declaration:
+            os << *(DeclarationNode *)snode << "\n";
+            break;
+        case SyntaxType::Assignment:
+            os << *(AssignmentNode *)snode << "\n";
+            break;
+        case SyntaxType::Variable:
+            os << *(VariableNode *)snode << "\n";
+            break;
         case SyntaxType::None:
         default:
             break;

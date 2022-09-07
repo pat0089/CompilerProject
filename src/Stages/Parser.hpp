@@ -20,6 +20,7 @@ private:
 class Parser {
 public:
     void Parse(const TokenList & tokens);
+    std::unordered_map<std::string, FunctionInfoTable> FunctionMap() const;
     const AST & GetAST() const;
 
     static Token * _lastParsed;
@@ -31,6 +32,7 @@ public:
 
 private:
     AST _ast;
+    std::unordered_map<std::string, FunctionInfoTable> _functionMap;
 
     //std::deque<Token> _tokens;
     TokenList * _tokens;
@@ -51,10 +53,10 @@ private:
     BodyNode * ParseBody();
     StatementNode * ParseStatement();
     ExpressionNode * ParseExpression();
+    ExpressionNode * ParseLogicalOrExpression();
     ExpressionNode * ParseLogicalAndExpression();
     ExpressionNode * ParseEqualityExpression();
     ExpressionNode * ParseRelationalExpression();
-    //ExpressionNode * ParseLogicalOrExpression();
     ExpressionNode * ParseAdditiveExpression();
     TermNode * ParseTerm();
     FactorNode * ParseFactor();
@@ -80,6 +82,10 @@ private:
     bool IsNextToken(SymbolType stype) const;
     bool IsNextToken(KeywordType ktype) const;
 
+    bool IsNextTokenAfter(TokenType type);
+    bool IsNextTokenAfter(SymbolType stype);
+    bool IsNextTokenAfter(KeywordType ktype);
+
     bool IsTokenType(TokenType type, Token * t) const;
     bool IsTokenType(SymbolType stype, Token * t) const;
     bool IsTokenType(KeywordType ktype, Token * t) const;
@@ -90,7 +96,7 @@ private:
     bool IsUnaryOperation(Token * t);
 
     static bool _verified;
-
+    static string _curFunction;
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP
