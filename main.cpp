@@ -26,7 +26,7 @@ int main(int argc, char * argv[]) {
 
     try {
         Compiler.Parse();
-        cout << Compiler.GetAST();
+        //cout << Compiler.GetAST();
     } catch (UnexpectedTokenException e) {
         cerr << e.what();
         exit(1);

@@ -1,6 +1,7 @@
 #include "CodeGenerator.hpp"
 #include <fstream>
 
+std::string CodeGenerator::_curFunction;
 int CodeGenerator::_labelCount = 0;
 
 void CodeGenerator::Generate(const AST &ast, const string & fname) {
@@ -11,24 +12,46 @@ void CodeGenerator::Generate(const AST &ast, const string & fname) {
 }
 
 void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
-    if (snode->Type() == SyntaxType::Function)
+    if (snode->Type() == SyntaxType::Function) {
         WriteFunction(*(FunctionNode *)(snode), file);
+        WriteFunctionPrologue(file);
+        for (int i = 0; i < snode->ChildCount(); i++) {
+            Generate(snode->Child(i), file);
+        }
 
+        //if function contains no return statement, return 0
+        if (!_functionMap[_curFunction].containsReturn)
+        {
+            ZeroOutRegister("eax", file);
+            WriteFunctionEpilogue(file);
+            WriteReturn(file);
+        }
+
+        return;
+    }
     if (snode->Type() == SyntaxType::BinaryOperator) {
         HandleBinaryOperator(*(BinaryOperatorNode *)(snode), file);
         return;
     }
 
+
     for (int i = 0; i < snode->ChildCount(); i++) {
         Generate(snode->Child(i), file);
     }
-    if (snode->Type() == SyntaxType::Return)
+    if (snode->Type() == SyntaxType::Declaration)
+        HandleDeclaration(*(DeclarationNode *)snode, file);
+    if (snode->Type() == SyntaxType::Assignment)
+        HandleAssignment(*(AssignmentNode * )snode, file);
+    if (snode->Type() == SyntaxType::Variable)
+        HandleVariable(*(VariableNode * )snode, file);
+    if (snode->Type() == SyntaxType::Return) {
+        WriteFunctionEpilogue(file);
         WriteReturn(file);
+    }
     if (snode->Type() == SyntaxType::UnaryOperator)
         HandleUnaryOperator(*(UnaryOperatorNode *)(snode), file);
     if (snode->Type() == SyntaxType::Constant)
         WriteToRegister("eax", *(ConstantNode *)(snode), file);
-
 }
 
 void CodeGenerator::HandleUnaryOperator(UnaryOperatorNode &uonode, std::ofstream &file) {
@@ -168,6 +191,8 @@ void CodeGenerator::DivideRegisters(const string &reg1, const string &reg2, std:
 
 
 void CodeGenerator::WriteFunction(FunctionNode & fnode, std::ofstream & file) {
+    _curFunction = fnode.Name();
+
     file << ".globl " << fnode.Name() << "\n";
     MarkLabel(fnode.Name(), file);
 }
@@ -285,3 +310,37 @@ void CodeGenerator::JumpIfNotEqual(const string &label, std::ofstream &file) {
 void CodeGenerator::JumpUnconditional(const string &label, std::ofstream &file) {
     file << "\tjmp\t\t" << label << "\n";
 }
+
+void CodeGenerator::WriteFunctionPrologue(std::ofstream &file) {
+    PushRegisterToStack("ebp", file);
+    CopyFromRegister("esp", "ebp", file);
+}
+
+void CodeGenerator::WriteFunctionEpilogue(std::ofstream &file) {
+    CopyFromRegister("ebp", "esp", file);
+    PopRegisterFromStack("ebp", file);
+}
+
+void CodeGenerator::FunctionMap(const std::unordered_map<std::string, FunctionInfoTable> &fmap) {
+    _functionMap = fmap;
+}
+
+void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::ofstream &file) {
+    //if (dnode.ChildCount()) Generate(dnode.Child(0), file);
+    PushRegisterToStack("eax", file);
+}
+
+void CodeGenerator::HandleAssignment(const AssignmentNode &anode, std::ofstream &file) {
+    int stack_var = _functionMap[_curFunction].variables[anode.GetVariableName()] + 1;
+    Movl("%eax, " + std::to_string(-4 * stack_var) + "(%ebp)", file);
+}
+
+void CodeGenerator::HandleVariable(const VariableNode &vnode, std::ofstream &file) {
+    int stack_var = _functionMap[_curFunction].variables[vnode.GetVariableName()] + 1;
+    Movl(std::to_string(-4 * stack_var) + "(%ebp), %eax", file);
+}
+
+void CodeGenerator::Movl(const string &statement, std::ofstream &file) {
+    file << "\tmovl\t" << statement << "\n";
+}
+

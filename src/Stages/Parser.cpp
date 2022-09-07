@@ -4,6 +4,7 @@
 using std::cerr;
 using std::endl;
 
+string Parser::_curFunction;
 Token * Parser::_lastParsed = nullptr;
 TokenType Parser::_expectedType = TokenType::None;
 SymbolType Parser::_expectedSymbolType = SymbolType::None;
@@ -25,22 +26,42 @@ ProgramNode * Parser::ParseProgram() {
     return new ProgramNode(ParseMainFunction());
 }
 
-//main function node does not have a name
 FunctionNode * Parser::ParseMainFunction() {
 
     (!IsNextToken(KeywordType::Int)) ? Fail(KeywordType::Int) : PopFront();
-
+    auto return_type = _lastParsed;
     //check if function name is 'main'
     (!IsNextToken(TokenType::Identifier)) ? Fail(TokenType::Identifier) : PopFront();
+
     if (_lastParsed->GetRaw() != "main") Fail(false);
+    PutbackFront(_lastParsed);
+    PutbackFront(return_type);
+
+    return ParseFunction();
+}
+
+FunctionNode * Parser::ParseFunction() {
+
+    (!IsNextToken(KeywordType::Int)) ? Fail(KeywordType::Int) : PopFront();
+
+    (!IsNextToken(TokenType::Identifier)) ? Fail(TokenType::Identifier) : PopFront();
+
+    _functionMap.insert(std::make_pair(_lastParsed->GetRaw(), FunctionInfoTable()));
+    _curFunction = _lastParsed->GetRaw();
 
     auto newFunction = new FunctionNode(_lastParsed->GetRaw());
 
+    auto params = ParseParameters();
+
     //parse args
-    newFunction->Add(ParseParameters());
+    newFunction->Add(params);
+
+    auto body = ParseBody();
 
     //parse body
-    newFunction->Add(ParseBody());
+    newFunction->Add(body);
+
+    _curFunction = "";
 
     return newFunction;
 }
@@ -60,6 +81,29 @@ Parameters * Parser::ParseParameters() {
     return newArgs;
 }
 
+BodyNode * Parser::ParseBody() {
+    TokenList * context = _curList;
+    _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Close_Brace));
+    (!IsNextToken(SymbolType::Open_Brace)) ? Fail(SymbolType::Open_Brace) : PopFront();
+
+    auto newBody = new BodyNode();
+
+    while (!IsNextToken(SymbolType::Close_Brace)) {
+        newBody->Add(ParseStatement());
+    }
+
+    (!IsNextToken(SymbolType::Close_Brace)) ? Fail(SymbolType::Close_Brace) : PopFront();
+
+    _curList = context;
+    return newBody;
+}
+
+ParameterNode * Parser::ParseParameter() {
+    //add code to parse the arguments of functions
+    //Fail();
+    return new ParameterNode();
+}
+
 StatementNode * Parser::ParseStatement() {
     //this will eventually support different types of statements
     TokenList * context = _curList;
@@ -68,6 +112,9 @@ StatementNode * Parser::ParseStatement() {
     if (IsNextToken(KeywordType::Return)) {
         //generate return statement
         PopFront();
+
+        _functionMap[_curFunction].containsReturn = true;
+
         toReturn = new ReturnNode(ParseExpression());
     } else if (!IsNextToken(KeywordType::Int)) {
         auto temp = ParseExpression();
@@ -80,6 +127,13 @@ StatementNode * Parser::ParseStatement() {
             PopFront();
             option = ParseExpression();
         }
+
+        if (_functionMap[_curFunction].variables.find(var_name->GetRaw()) != _functionMap[_curFunction].variables.end()) {
+            throw UnexpectedTokenException("Variable Redefinition: " + var_name->GetRaw());
+        } else {
+            _functionMap[_curFunction].variables.insert(std::make_pair(var_name->GetRaw(), _functionMap[_curFunction].variables.size()));
+        }
+
         toReturn = new DeclarationNode(var_name->GetRaw(), option);
     }
 
@@ -97,6 +151,11 @@ ExpressionNode * Parser::ParseExpression() {
         if (IsNextToken(SymbolType::Equals)) {
             //parse assignment
             PopFront();
+
+            if (_functionMap[_curFunction].variables.find(var_name->GetRaw()) == _functionMap[_curFunction].variables.end()) {
+                throw UnexpectedTokenException("Variable Assignment before Declaration: " + var_name->GetRaw());
+            }
+
             auto temp = new AssignmentNode(var_name->GetRaw(), ParseExpression());
             return (ExpressionNode *)temp;
         } else {
@@ -142,6 +201,9 @@ ExpressionNode *Parser::ParseEqualityExpression() {
         SymbolType op = GetSymbolType(Front());
         SymbolType op2 = SymbolType::None;
         if (IsNextToken(SymbolType::Equals)) op2 = GetSymbolType(Front());
+
+        if (op2 == SymbolType::None) throw UnexpectedTokenException("Invalid Left Side Operator");
+
         auto next_expr = ParseRelationalExpression();
         equality_expr = new BinaryOperatorNode(op, op2, equality_expr, next_expr);
     }
@@ -207,51 +269,15 @@ FactorNode *Parser::ParseFactor() {
         auto temp = new ConstantNode((Literal *)Front());
         return (FactorNode *)temp;
     } else if (IsNextToken(TokenType::Identifier)) {
-        auto temp = new VariableNode(Front()->GetRaw());
+        auto tempToken = Front();
+        if (_functionMap[_curFunction].variables.find(tempToken->GetRaw()) == _functionMap[_curFunction].variables.end())
+            throw UnexpectedTokenException("Variable used before Declaration: " + tempToken->GetRaw());
+        auto temp = new VariableNode(tempToken->GetRaw());
         return (FactorNode *)temp;
     } else {
         Fail("Tried to parse Factor and Failed!!!");
         return nullptr;
     }
-}
-
-FunctionNode * Parser::ParseFunction() {
-    (!IsNextToken(KeywordType::Int)) ? Fail(KeywordType::Int) : PopFront();
-
-    (!IsNextToken(TokenType::Identifier)) ? Fail(TokenType::Identifier) : PopFront();
-
-    auto newFunction = new FunctionNode(_lastParsed->GetRaw());
-
-    //parse args
-    newFunction->Add(ParseParameters());
-
-    //parse body
-    newFunction->Add(ParseBody());
-
-    return newFunction;
-}
-
-BodyNode * Parser::ParseBody() {
-    TokenList * context = _curList;
-    _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Close_Brace));
-    (!IsNextToken(SymbolType::Open_Brace)) ? Fail(SymbolType::Open_Brace) : PopFront();
-
-    auto newBody = new BodyNode();
-
-    while (!IsNextToken(SymbolType::Close_Brace)) {
-        newBody->Add(ParseStatement());
-    }
-
-    (!IsNextToken(SymbolType::Close_Brace)) ? Fail(SymbolType::Close_Brace) : PopFront();
-
-    _curList = context;
-    return newBody;
-}
-
-ParameterNode * Parser::ParseParameter() {
-    //add code to parse the arguments of functions
-    //Fail();
-    return new ParameterNode();
 }
 
 TokenList &Parser::List() {
@@ -472,4 +498,8 @@ bool Parser::IsUnaryOperation(Token * t) {
 
 void Parser::PutbackFront(Token *t) {
     _curList->PutbackFront(t);
+}
+
+std::unordered_map<std::string, FunctionInfoTable> Parser::FunctionMap() const {
+    return _functionMap;
 }

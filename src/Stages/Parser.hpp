@@ -20,6 +20,7 @@ private:
 class Parser {
 public:
     void Parse(const TokenList & tokens);
+    std::unordered_map<std::string, FunctionInfoTable> FunctionMap() const;
     const AST & GetAST() const;
 
     static Token * _lastParsed;
@@ -31,6 +32,7 @@ public:
 
 private:
     AST _ast;
+    std::unordered_map<std::string, FunctionInfoTable> _functionMap;
 
     //std::deque<Token> _tokens;
     TokenList * _tokens;
@@ -94,6 +96,7 @@ private:
     bool IsUnaryOperation(Token * t);
 
     static bool _verified;
+    static string _curFunction;
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP
