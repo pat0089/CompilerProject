@@ -6,10 +6,10 @@ using std::istream;
 using std::ostream;
 using std::regex;
 
-const regex Lexer::isKeyword = regex("int|char|return");
+const regex Lexer::isKeyword = regex("int|char|return|if|else");
 const regex Lexer::isIdentifier = regex("[_a-zA-Z][_a-zA-Z0-9]{0,30}");
 const regex Lexer::isLiteral = regex("[0-9]+");
-const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\<|\>|\[|\]|\;|\+|\-|\*|\/|\=|\~|\!|\||\&)");
+const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\<|\>|\[|\]|\;|\+|\-|\*|\/|\=|\~|\!|\||\&|\:|\?)");
 
 void Lexer::Lex(istream & is) {
     is >> *_tokens;
