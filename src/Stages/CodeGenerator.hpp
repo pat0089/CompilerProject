@@ -84,6 +84,9 @@ private:
     void HandleAssignment(const AssignmentNode & anode, std::ofstream &file);
     void HandleVariable(const VariableNode & vnode, std::ofstream &file);
 
+    void HandleConditionalStatement(const ConditionalStatementNode & csnode, std::ofstream &file);
+    void HandleConditionalExpression(const ConditionalExpressionNode & cenode, std::ofstream &file);
+
     static std::string _curFunction;
 };
 
