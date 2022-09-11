@@ -14,8 +14,8 @@ OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2, Sy
         case SymbolType::Plus:
             return OperatorType::Addition;
         case SymbolType::Minus:
-            if (stype3 == SyntaxType::UnaryOperator) return OperatorType::Negation;
-            if (stype3 == SyntaxType::BinaryOperator) return OperatorType::Minus;
+            if (stype3 == SyntaxType::Unary_Operator) return OperatorType::Negation;
+            if (stype3 == SyntaxType::Binary_Operator) return OperatorType::Minus;
         case SymbolType::ForwardSlash:
             return OperatorType::Division;
         case SymbolType::Asterisk:

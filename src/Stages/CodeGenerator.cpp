@@ -29,7 +29,7 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
 
         return;
     }
-    if (snode->Type() == SyntaxType::BinaryOperator) {
+    if (snode->Type() == SyntaxType::Binary_Operator) {
         HandleBinaryOperator(*(BinaryOperatorNode *)(snode), file);
         return;
     }
@@ -48,7 +48,7 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
         WriteFunctionEpilogue(file);
         WriteReturn(file);
     }
-    if (snode->Type() == SyntaxType::UnaryOperator)
+    if (snode->Type() == SyntaxType::Unary_Operator)
         HandleUnaryOperator(*(UnaryOperatorNode *)(snode), file);
     if (snode->Type() == SyntaxType::Constant)
         WriteToRegister("eax", *(ConstantNode *)(snode), file);

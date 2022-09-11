@@ -16,7 +16,7 @@ public:
     OperatorType GetOperator() const;
 protected:
     OperatorType _otype;
-    static OperatorType ConvertOperator(SymbolType stype1, SymbolType stype2 = SymbolType::None, SyntaxType stype3 = SyntaxType::UnaryOperator);
+    static OperatorType ConvertOperator(SymbolType stype1, SymbolType stype2 = SymbolType::None, SyntaxType stype3 = SyntaxType::Unary_Operator);
 };
 
 

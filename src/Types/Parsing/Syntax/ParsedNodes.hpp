@@ -9,6 +9,7 @@
 #include "Statements/StatementNode.hpp"
 #include "Statements/AssignmentNode.hpp"
 #include "Statements/DeclarationNode.hpp"
+#include "Statements/ConditionalStatementNode.hpp"
 #include "Statements/ReturnNode.hpp"
 #include "Statements/BodyNode.hpp"
 
@@ -17,4 +18,5 @@
 #include "Expressions/UnaryOperatorNode.hpp"
 #include "Expressions/BinaryOperatorNode.hpp"
 #include "Expressions/VariableNode.hpp"
+#include "Expressions/ConditionalExpressionNode.hpp"
 #endif //COMPILERPROJECT_PARSEDNODES_HPP
