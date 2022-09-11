@@ -1,7 +1,7 @@
 #include "UnaryOperatorNode.hpp"
 using std::string;
 
-UnaryOperatorNode::UnaryOperatorNode(SymbolType stype, ExpressionNode * exp) : ExpressionNode(SyntaxType::UnaryOperator), _stype(stype) {
+UnaryOperatorNode::UnaryOperatorNode(SymbolType stype, ExpressionNode * exp) : ExpressionNode(SyntaxType::Unary_Operator), _stype(stype) {
     Add(exp);
     _otype = IOperator::ConvertOperator(stype);
 }

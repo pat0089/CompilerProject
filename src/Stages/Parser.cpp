@@ -89,7 +89,8 @@ BodyNode * Parser::ParseBody() {
     auto newBody = new BodyNode();
 
     while (!IsNextToken(SymbolType::Close_Brace)) {
-        newBody->Add(ParseStatement());
+        if (!IsNextToken(KeywordType::Int)) newBody->Add(ParseStatement());
+        else newBody->Add(ParseDeclaration());
     }
 
     (!IsNextToken(SymbolType::Close_Brace)) ? Fail(SymbolType::Close_Brace) : PopFront();
@@ -104,10 +105,36 @@ ParameterNode * Parser::ParseParameter() {
     return new ParameterNode();
 }
 
-StatementNode * Parser::ParseStatement() {
-    //this will eventually support different types of statements
+StatementNode *Parser::ParseDeclaration() {
+    StatementNode * toReturn;
+
     TokenList * context = _curList;
     _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Semicolon));
+
+    PopFront();
+    auto var_name = Front();
+    ExpressionNode * option = nullptr;
+    if (IsNextToken(SymbolType::Equals)) {
+        PopFront();
+        option = ParseExpression();
+    }
+
+    if (_functionMap[_curFunction].variables.find(var_name->GetRaw()) != _functionMap[_curFunction].variables.end()) {
+        throw UnexpectedTokenException("Variable Redefinition: " + var_name->GetRaw());
+    } else {
+        _functionMap[_curFunction].variables.insert(std::make_pair(var_name->GetRaw(), _functionMap[_curFunction].variables.size()));
+    }
+
+    toReturn = new DeclarationNode(var_name->GetRaw(), option);
+
+    //DONT FORGET THE SEMICOLON
+    TryParse(SymbolType::Semicolon);
+
+    _curList = context;
+    return toReturn;
+}
+
+StatementNode * Parser::ParseStatement() {
     StatementNode * toReturn;
     if (IsNextToken(KeywordType::Return)) {
         //generate return statement
@@ -116,36 +143,29 @@ StatementNode * Parser::ParseStatement() {
         _functionMap[_curFunction].containsReturn = true;
 
         toReturn = new ReturnNode(ParseExpression());
-    } else if (!IsNextToken(KeywordType::Int)) {
+    } else if (!IsNextToken(KeywordType::If)) {
         auto temp = ParseExpression();
         toReturn = (StatementNode * )temp;
     } else {
         PopFront();
-        auto var_name = Front();
-        ExpressionNode * option = nullptr;
-        if (IsNextToken(SymbolType::Equals)) {
+        TryParse(SymbolType::Open_Parenthesis);
+        auto exp = ParseExpression();
+        TryParse(SymbolType::Close_Parenthesis);
+        auto state = ParseStatement();
+        StatementNode * option = nullptr;
+        if (IsNextToken(KeywordType::Else)) {
             PopFront();
-            option = ParseExpression();
+            option = ParseStatement();
         }
-
-        if (_functionMap[_curFunction].variables.find(var_name->GetRaw()) != _functionMap[_curFunction].variables.end()) {
-            throw UnexpectedTokenException("Variable Redefinition: " + var_name->GetRaw());
-        } else {
-            _functionMap[_curFunction].variables.insert(std::make_pair(var_name->GetRaw(), _functionMap[_curFunction].variables.size()));
-        }
-
-        toReturn = new DeclarationNode(var_name->GetRaw(), option);
+        toReturn = new ConditionalStatementNode(exp, state, option);
     }
 
     //DONT FORGET THE SEMICOLON
-    (!IsNextToken(SymbolType::Semicolon)) ? Fail(SymbolType::Semicolon) : PopFront();
-
-    _curList = context;
+    if (toReturn->Type() != SyntaxType::Conditional_Statement) TryParse(SymbolType::Semicolon);
     return toReturn;
 }
 
 ExpressionNode * Parser::ParseExpression() {
-
     if (IsNextToken(TokenType::Identifier)) {
         auto var_name = Front();
         if (IsNextToken(SymbolType::Equals)) {
@@ -162,9 +182,22 @@ ExpressionNode * Parser::ParseExpression() {
             PutbackFront(var_name);
         }
     }
-    return ParseLogicalOrExpression();
+    return ParseConditionalExpression();
 }
 
+ExpressionNode *Parser::ParseConditionalExpression() {
+    ExpressionNode * conditional_expr = ParseLogicalOrExpression();
+
+    if (IsNextToken(SymbolType::Question_Mark)) {
+        PopFront();
+        auto expr = ParseExpression();
+        TryParse(SymbolType::Colon);
+        auto expr2 = ParseConditionalExpression();
+        conditional_expr = new ConditionalExpressionNode(conditional_expr, expr, expr2);
+    }
+
+    return conditional_expr;
+}
 
 ExpressionNode *Parser::ParseLogicalOrExpression() {
     ExpressionNode * logical_or_expr = ParseLogicalAndExpression();
@@ -253,12 +286,8 @@ FactorNode *Parser::ParseFactor() {
     if (IsNextToken(SymbolType::Open_Parenthesis)) {
         PopFront();
         auto exp = (FactorNode *)ParseExpression();
-        if (!IsNextToken(SymbolType::Close_Parenthesis)) {
-            Fail(SymbolType::Close_Parenthesis);
-        } else {
-            PopFront();
-            return exp;
-        }
+        TryParse(SymbolType::Close_Parenthesis);
+        return exp;
     } else if (IsUnaryOperation(PeekFront())) {
         auto next = Front();
         SymbolType stype = GetSymbolType(next);
@@ -285,6 +314,7 @@ TokenList &Parser::List() {
 }
 
 bool Parser::IsTokenType(TokenType type, Token * t) const {
+    if (!t) return false;
     return t->Type() == type;
 }
 
@@ -502,4 +532,16 @@ void Parser::PutbackFront(Token *t) {
 
 std::unordered_map<std::string, FunctionInfoTable> Parser::FunctionMap() const {
     return _functionMap;
+}
+
+void Parser::TryParse(TokenType type) {
+    IsNextToken(type) ? PopFront() : Fail(type);
+}
+
+void Parser::TryParse(SymbolType stype) {
+    IsNextToken(stype) ? PopFront() : Fail(stype);
+}
+
+void Parser::TryParse(KeywordType ktype) {
+    IsNextToken(ktype) ? PopFront() : Fail(ktype);
 }

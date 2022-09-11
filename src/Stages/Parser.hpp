@@ -52,7 +52,9 @@ private:
     //Running code parsers
     BodyNode * ParseBody();
     StatementNode * ParseStatement();
+    StatementNode * ParseDeclaration();
     ExpressionNode * ParseExpression();
+    ExpressionNode * ParseConditionalExpression();
     ExpressionNode * ParseLogicalOrExpression();
     ExpressionNode * ParseLogicalAndExpression();
     ExpressionNode * ParseEqualityExpression();
@@ -60,6 +62,7 @@ private:
     ExpressionNode * ParseAdditiveExpression();
     TermNode * ParseTerm();
     FactorNode * ParseFactor();
+
 
 
     static void Fail(bool hasMain = true);
@@ -92,6 +95,10 @@ private:
 
     SymbolType GetSymbolType(Token * t) const;
     KeywordType GetKeywordType(Token * t) const;
+
+    void TryParse(TokenType type);
+    void TryParse(SymbolType stype);
+    void TryParse(KeywordType ktype);
 
     bool IsUnaryOperation(Token * t);
 

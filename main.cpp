@@ -23,7 +23,6 @@ int main(int argc, char * argv[]) {
     //
     // cout << endl << "********************" << endl;
 
-
     try {
         Compiler.Parse();
         //cout << Compiler.GetAST();

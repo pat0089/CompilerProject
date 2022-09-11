@@ -2,7 +2,7 @@
 #define COMPILERPROJECT_SYMBOL_HPP
 #include "Token.hpp"
 
-enum class SymbolType { None , Semicolon, Colon,
+enum class SymbolType { None , Semicolon, Colon, Question_Mark,
     Open_Parenthesis, Close_Parenthesis,
     Open_Brace, Close_Brace,
     Open_Bracket, Close_Bracket,

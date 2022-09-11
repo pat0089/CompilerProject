@@ -57,6 +57,8 @@ SymbolType Symbol::GetSymType(const string & rawString) {
             return SymbolType::Hashmark;
         case '|':
             return SymbolType::Vertical_Line;
+        case '?':
+            return SymbolType::Question_Mark;
     }
     return SymbolType::None;
 }
@@ -113,6 +115,8 @@ std::string Symbol::GetString(SymbolType stype) {
             return "~";
         case SymbolType::Vertical_Line:
             return "|";
+        case SymbolType::Question_Mark:
+            return "?";
         case SymbolType::None:
         default:
             return "";

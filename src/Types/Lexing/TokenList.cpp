@@ -30,7 +30,7 @@ TokenList::TokenList(const TokenList &toCopy) : _tokens(new deque<Token *>) {
 
 ostream &operator<<(ostream &os, const TokenList &tokenList) {
     for (auto i = tokenList._tokens->begin(); i != tokenList._tokens->end(); i++) {
-        os << *(*i) << " ";
+        os << *(*i) << "\n";
     }
     return os;
 }

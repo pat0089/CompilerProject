@@ -16,7 +16,12 @@ Keyword::Keyword(const string &toInit) : Token(toInit) {
 KeywordType Keyword::GetKeyType(const string & rawString) {
     if (rawString == "return") {
         return KeywordType::Return;
-    } else {
+    } else if (rawString == "int") {
         return KeywordType::Int;
+    } else if (rawString == "if") {
+        return KeywordType::If;
+    } else if (rawString == "else") {
+        return KeywordType::Else;
     }
+    return KeywordType::None;
 }

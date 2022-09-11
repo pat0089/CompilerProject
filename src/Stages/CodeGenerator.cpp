@@ -18,7 +18,6 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
         for (int i = 0; i < snode->ChildCount(); i++) {
             Generate(snode->Child(i), file);
         }
-
         //if function contains no return statement, return 0
         if (!_functionMap[_curFunction].containsReturn)
         {
@@ -26,14 +25,22 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
             WriteFunctionEpilogue(file);
             WriteReturn(file);
         }
-
         return;
     }
-    if (snode->Type() == SyntaxType::BinaryOperator) {
+    if (snode->Type() == SyntaxType::Binary_Operator) {
         HandleBinaryOperator(*(BinaryOperatorNode *)(snode), file);
         return;
     }
 
+    if (snode->Type() == SyntaxType::Conditional_Statement) {
+        HandleConditionalStatement(*(ConditionalStatementNode *)(snode), file);
+        return;
+    }
+
+    if (snode->Type() == SyntaxType::Conditional_Expression) {
+        HandleConditionalExpression(*(ConditionalExpressionNode *)(snode), file);
+        return;
+    }
 
     for (int i = 0; i < snode->ChildCount(); i++) {
         Generate(snode->Child(i), file);
@@ -48,7 +55,7 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
         WriteFunctionEpilogue(file);
         WriteReturn(file);
     }
-    if (snode->Type() == SyntaxType::UnaryOperator)
+    if (snode->Type() == SyntaxType::Unary_Operator)
         HandleUnaryOperator(*(UnaryOperatorNode *)(snode), file);
     if (snode->Type() == SyntaxType::Constant)
         WriteToRegister("eax", *(ConstantNode *)(snode), file);
@@ -342,5 +349,45 @@ void CodeGenerator::HandleVariable(const VariableNode &vnode, std::ofstream &fil
 
 void CodeGenerator::Movl(const string &statement, std::ofstream &file) {
     file << "\tmovl\t" << statement << "\n";
+}
+
+void CodeGenerator::HandleConditionalStatement(const ConditionalStatementNode &csnode, std::ofstream &file) {
+    auto end = CreateNewLabel();
+
+    //generate decision expression
+    Generate(csnode.Child(0), file);
+    CompareWithZero("eax", file);
+
+    //future proofing for when I can handle context blocks
+    if (csnode.ChildCount() > 2) {
+        auto jump = CreateNewLabel();
+        JumpIfEqual(jump, file);
+        Generate(csnode.Child(1), file);
+        JumpUnconditional(end, file);
+        MarkLabel(jump, file);
+        Generate(csnode.Child(2), file);
+    } else {
+        JumpIfEqual(end, file);
+        Generate(csnode.Child(1), file);
+    }
+    MarkLabel(end, file);
+}
+
+void CodeGenerator::HandleConditionalExpression(const ConditionalExpressionNode &cenode, std::ofstream &file) {
+    auto jump = CreateNewLabel();
+    auto end = CreateNewLabel();
+
+    //this type of expression is guaranteed to have 3 children
+    //generate decision expression
+    Generate(cenode.Child(0), file);
+    CompareWithZero("eax", file);
+    JumpIfEqual(jump, file);
+    //generate first possible path
+    Generate(cenode.Child(1), file);
+    JumpUnconditional(end, file);
+    MarkLabel(jump, file);
+    //generate second possible path
+    Generate(cenode.Child(2), file);
+    MarkLabel(end, file);
 }
 
