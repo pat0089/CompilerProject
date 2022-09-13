@@ -30,7 +30,7 @@ int SymbolMap::FindVariable(const std::string &vname) const {
             return _functionMap->at(CurrentFunction).variables[vname];
         }
     }
-    return false;
+    return -1;
 }
 
 void SymbolMap::ContainsReturn(bool val) {

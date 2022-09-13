@@ -19,7 +19,7 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
             Generate(snode->Child(i), file);
         }
         //if function contains no return statement, return 0
-        if (_symbolMap->ContainsReturn())
+        if (!_symbolMap->ContainsReturn())
         {
             ZeroOutRegister("eax", file);
             WriteFunctionEpilogue(file);
@@ -198,8 +198,6 @@ void CodeGenerator::DivideRegisters(const string &reg1, const string &reg2, std:
 
 
 void CodeGenerator::WriteFunction(FunctionNode & fnode, std::ofstream & file) {
-    _curFunction = fnode.Name();
-
     file << ".globl " << fnode.Name() << "\n";
     MarkLabel(fnode.Name(), file);
 }
@@ -296,10 +294,10 @@ void CodeGenerator::CompareLessThanOrEqual(const string &reg1, const string &reg
     SetIfLessThanOrEqual(reg1, file);
 }
 
-std::string &CodeGenerator::CreateNewLabel() {
-    auto temp = new std::string("_lab" + std::to_string(_labelCount));
+std::string CodeGenerator::CreateNewLabel() {
+    auto temp = "_lab" + std::to_string(_labelCount);
     _labelCount++;
-    return *temp;
+    return temp;
 }
 
 void CodeGenerator::MarkLabel(const string &label, std::ofstream & file) {
@@ -345,7 +343,7 @@ void CodeGenerator::HandleAssignment(const AssignmentNode &anode, std::ofstream 
 void CodeGenerator::HandleVariable(const VariableNode &vnode, std::ofstream &file) {
     int stack_var = _symbolMap->FindVariable(vnode.GetVariableName());
     if (stack_var == -1) {
-        throw VariableException("Variable not in variable Map for referencing!");
+        throw CodeGenerationException("Variable not in variable Map for referencing!");
     } else {
         Movl(std::to_string(-4 * stack_var) + "(%ebp), %eax", file);
     }

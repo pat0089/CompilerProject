@@ -8,9 +8,9 @@
 #include "../Types/Parsing/Syntax/Expressions/FactorNode.hpp"
 #include "../Types/SymbolMap.hpp"
 
-class UnexpectedTokenException : public std::exception {
+class ParsingException : public std::exception {
 public:
-    UnexpectedTokenException(const std::string & msg) : message("UnexpectedTokenException: " + msg) {}
+    ParsingException(const std::string & msg) : message("ParsingException: " + msg) {}
     const char * what() {
         return message.c_str();
     }

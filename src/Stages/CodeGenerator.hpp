@@ -3,9 +3,9 @@
 #include "../Types/Parsing/AST.hpp"
 #include "../Types/SymbolMap.hpp"
 
-class VariableException : public std::exception {
+class CodeGenerationException : public std::exception {
 public:
-    VariableException(const std::string & msg) : message("VariableException: " + msg) {}
+    CodeGenerationException(const std::string & msg) : message("CodeGenerationException: " + msg) {}
     const char * what() {
         return message.c_str();
     }
@@ -86,7 +86,7 @@ private:
 
     //label functions
     static int _labelCount;
-    std::string & CreateNewLabel();
+    std::string CreateNewLabel();
     void MarkLabel(const std::string & label, std::ofstream & file);
 
     //std::unordered_map<std::string, FunctionInfoTable> _functionMap;

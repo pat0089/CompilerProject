@@ -1,9 +1,9 @@
 int main() {
-    int a = 0;
+    int a = 1;
+    int b = 2;
     {
-        a = 3;
-        int a = 1;
-        a = 9;
+        a = b;
     }
-    return a;
+    if (a > b) return a;
+    else return b;
 }

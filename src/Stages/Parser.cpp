@@ -113,7 +113,9 @@ StatementNode *Parser::ParseDeclaration() {
         option = ParseExpression();
     }
 
-    _symbolMap.AddVariable(var_name->GetRaw());
+    if (_symbolMap.AddVariable(var_name->GetRaw()) == -1) {
+        throw ParsingException("Variable redefinition: " + var_name->GetRaw());
+    }
 
     toReturn = new DeclarationNode(var_name->GetRaw(), option);
 
@@ -177,7 +179,7 @@ ExpressionNode * Parser::ParseExpression() {
             PopFront();
 
             if (_symbolMap.FindVariable(var_name->GetRaw()) == -1) {
-                throw UnexpectedTokenException("Variable Assignment before Declaration: " + var_name->GetRaw());
+                throw ParsingException("Variable Assignment before Declaration: " + var_name->GetRaw());
             }
 
             auto temp = new AssignmentNode(var_name->GetRaw(), ParseExpression());
@@ -208,11 +210,16 @@ ExpressionNode *Parser::ParseLogicalOrExpression() {
     ExpressionNode * logical_or_expr = ParseLogicalAndExpression();
 
     while (IsNextToken(SymbolType::Vertical_Line)) {
-        SymbolType op = GetSymbolType(Front());
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
         SymbolType op2 = SymbolType::None;
-        if (IsNextToken(SymbolType::Vertical_Line)) op2 = GetSymbolType(Front());
+        if (IsNextToken(SymbolType::Vertical_Line)) {
+            PopFront();
+            op2 = SymbolType::Vertical_Line;
+        }
         auto next_expr = ParseLogicalAndExpression();
         logical_or_expr = new BinaryOperatorNode(op, op2, logical_or_expr, next_expr);
+        delete tempToken;
     }
 
     return logical_or_expr;
@@ -222,11 +229,16 @@ ExpressionNode *Parser::ParseLogicalAndExpression() {
     ExpressionNode * logical_and_expr = ParseEqualityExpression();
 
     while (IsNextToken(SymbolType::And)) {
-        SymbolType op = GetSymbolType(Front());
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
         SymbolType op2 = SymbolType::None;
-        if (IsNextToken(SymbolType::And)) op2 = GetSymbolType(Front());
+        if (IsNextToken(SymbolType::And)) {
+            PopFront();
+            op2 = SymbolType::And;
+        }
         auto next_expr = ParseEqualityExpression();
         logical_and_expr = new BinaryOperatorNode(op, op2, logical_and_expr, next_expr);
+        delete tempToken;
     }
 
     return logical_and_expr;
@@ -236,14 +248,18 @@ ExpressionNode *Parser::ParseEqualityExpression() {
     ExpressionNode * equality_expr = ParseRelationalExpression();
 
     while (IsNextToken(SymbolType::Equals) || IsNextToken(SymbolType::Exclaimation)) {
-        SymbolType op = GetSymbolType(Front());
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
         SymbolType op2 = SymbolType::None;
-        if (IsNextToken(SymbolType::Equals)) op2 = GetSymbolType(Front());
-
-        if (op2 == SymbolType::None) throw UnexpectedTokenException("Invalid Left Side Operator");
+        if (IsNextToken(SymbolType::Equals)) {
+            PopFront();
+            op2 = SymbolType::Equals;
+        }
+        if (op2 == SymbolType::None) throw ParsingException("Invalid Left Side Operator");
 
         auto next_expr = ParseRelationalExpression();
         equality_expr = new BinaryOperatorNode(op, op2, equality_expr, next_expr);
+        delete tempToken;
     }
 
     return equality_expr;
@@ -253,11 +269,16 @@ ExpressionNode *Parser::ParseRelationalExpression() {
     ExpressionNode * relational_expr = ParseAdditiveExpression();
 
     while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
-        SymbolType op = GetSymbolType(Front());
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
         SymbolType op2 = SymbolType::None;
-        if (IsNextToken(SymbolType::Equals)) op2 = GetSymbolType(Front());
+        if (IsNextToken(SymbolType::Equals)) {
+            PopFront();
+            op2 = SymbolType::Equals;
+        }
         auto next_expr = ParseAdditiveExpression();
         relational_expr = new BinaryOperatorNode(op, op2, relational_expr, next_expr);
+        delete tempToken;
     }
 
     return relational_expr;
@@ -267,9 +288,11 @@ ExpressionNode *Parser::ParseAdditiveExpression() {
     ExpressionNode * term = ParseTerm();
 
     while (IsNextToken(SymbolType::Plus) || IsNextToken(SymbolType::Minus)) {
-        SymbolType op = GetSymbolType(Front());
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
         auto next_term = ParseTerm();
         term = new BinaryOperatorNode(op, SymbolType::None, term, next_term);
+        delete tempToken;
     }
 
     return term;
@@ -279,9 +302,11 @@ TermNode *Parser::ParseTerm() {
     TermNode * factor = ParseFactor();
 
     while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash)) {
-        SymbolType op = GetSymbolType(Front());
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
         auto next_factor = ParseFactor();
         factor = (TermNode *)(new BinaryOperatorNode(op, SymbolType::None, factor, next_factor));
+        delete tempToken;
     }
 
     return factor;
@@ -308,7 +333,7 @@ FactorNode *Parser::ParseFactor() {
     } else if (IsNextToken(TokenType::Identifier)) {
         auto tempToken = Front();
         if (_symbolMap.FindVariable(tempToken->GetRaw()) == -1)
-            throw UnexpectedTokenException("Variable used before Declaration: " + tempToken->GetRaw());
+            throw ParsingException("Variable used before Declaration: " + tempToken->GetRaw());
         auto temp = new VariableNode(tempToken->GetRaw());
         delete tempToken;
         return (FactorNode *)temp;
@@ -383,12 +408,10 @@ Token *Parser::PeekFront() {
 void Parser::Fail(bool hasMain) {
     std::stringstream err;
     if (_verified) _verified = false;
-    if (_lastParsed->Type() == TokenType::None) {
-        cerr << "FAIL0!: Empty Token\n";
-    } else if (!hasMain) {
-        cerr << "FAIL1!: No \'main\' function found\n";
+    if (!hasMain) {
+        cerr << "FAIL0!: No \'main\' function found\n";
     } else {
-        err << "FAIL2!: Unexpected Token -> " << _lastParsed->GetRaw() << "\n\tExpected: ";
+        err << "FAIL1!: Unexpected Token, Expected: ";
         switch (_expectedType) {
             case TokenType::Symbol:
                 err << "Symbol \'";
@@ -470,7 +493,7 @@ void Parser::Fail(bool hasMain) {
                 break;
         }
         err << endl;
-        throw UnexpectedTokenException(err.str());
+        throw ParsingException(err.str());
     }
 }
 
