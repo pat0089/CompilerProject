@@ -17,9 +17,11 @@ enum class SymbolType { None , Semicolon, Colon, Question_Mark,
 class Symbol : public Token {
 public:
     explicit Symbol(const std::string & toInit);
+    Symbol(const Symbol & toCopy);
     std::string TypeString() const override;
     SymbolType SymType() const;
     static std::string GetString(SymbolType stype);
+    Token * Clone() override;
 private:
     SymbolType _symType;
     static SymbolType GetSymType(const std::string & rawString);

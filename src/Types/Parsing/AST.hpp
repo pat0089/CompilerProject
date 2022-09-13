@@ -6,15 +6,11 @@
 #include <unordered_map>
 using std::string;
 
-class FunctionInfoTable {
-public:
-    std::unordered_map<string, int> variables;
-    bool containsReturn = false;
-};
-
 class AST {
 public:
     //returns a reference to the ProgramNode of the AST
+    AST();
+    ~AST();
     ProgramNode * Program() const;
 
     void Program(ProgramNode * main);

@@ -7,7 +7,13 @@ using std::deque;
 
 TokenList::TokenList() : _tokens(new deque<Token *>) { }
 
-TokenList::~TokenList() { delete _tokens; }
+TokenList::~TokenList() {
+    while (!_tokens->empty()) {
+        auto temp = PopFront();
+        delete temp;
+    }
+    delete _tokens;
+}
 
 void TokenList::AddToken(Token * token) {
     _tokens->push_back(token);
@@ -22,15 +28,14 @@ Token * TokenList::PeekFront() const {
 }
 
 TokenList::TokenList(const TokenList &toCopy) : _tokens(new deque<Token *>) {
-    for (auto i = toCopy._tokens->begin(); i != toCopy._tokens->end(); i++) {
-        auto checkForNull = Token::Create((*i)->GetRaw());
-        if (checkForNull != nullptr) _tokens->push_back(checkForNull);
+    for (auto & _token : *toCopy._tokens) {
+        _tokens->emplace_back(_token->Clone());
     }
 }
 
 ostream &operator<<(ostream &os, const TokenList &tokenList) {
-    for (auto i = tokenList._tokens->begin(); i != tokenList._tokens->end(); i++) {
-        os << *(*i) << "\n";
+    for (auto & _token : *tokenList._tokens) {
+        os << *_token << "\n";
     }
     return os;
 }
@@ -44,8 +49,6 @@ istream &operator>>(istream &is, TokenList &tokenList) {
 }
 
 Token * TokenList::SeekToNext(TokenType type, Token * from) {
-    //deque<Token>::iterator start;
-    //if (from != nullptr) {}
     auto start = _tokens->begin();
     if (from != nullptr) start = std::find(_tokens->begin(), _tokens->end(), from);
 

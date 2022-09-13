@@ -6,3 +6,9 @@ string Literal::TypeString() const {
 }
 
 Literal::Literal(const string &toInit) : Token(toInit) { }
+
+Token *Literal::Clone() {
+    return new Literal(*this);
+}
+
+Literal::Literal(const Literal &toCopy) : Token(toCopy) {}

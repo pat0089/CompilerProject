@@ -31,35 +31,16 @@ set(SOURCE_FILES
         src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.cpp
         src/Types/Parsing/Syntax/Expressions/TermNode.cpp
         src/Types/Parsing/Syntax/Expressions/FactorNode.cpp
-        src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.cpp src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.hpp src/Types/Parsing/Syntax/Expressions/IOperator.cpp src/Types/Parsing/Syntax/Expressions/IOperator.hpp src/Types/Parsing/Syntax/Statements/DeclarationNode.cpp src/Types/Parsing/Syntax/Statements/DeclarationNode.hpp src/Types/Parsing/Syntax/Expressions/VariableNode.cpp src/Types/Parsing/Syntax/Expressions/VariableNode.hpp src/Types/Parsing/Syntax/Expressions/IVariable.cpp src/Types/Parsing/Syntax/Expressions/IVariable.hpp src/Types/Parsing/Syntax/Statements/AssignmentNode.cpp src/Types/Parsing/Syntax/Statements/AssignmentNode.hpp src/Types/Parsing/Syntax/Statements/ConditionalStatementNode.cpp src/Types/Parsing/Syntax/Statements/ConditionalStatementNode.hpp src/Types/Parsing/Syntax/Expressions/ConditionalExpressionNode.cpp src/Types/Parsing/Syntax/Expressions/ConditionalExpressionNode.hpp)
-
-set(HEADER_FILES
-        src/Types/Lexing/Tokens/Token.hpp
-        src/Compiler.hpp
-        src/Stages/Lexer.hpp
-        src/Types/Parsing/AST.hpp
-        src/Stages/Parser.hpp
-        src/Types/Parsing/SyntaxNode.hpp
-        src/Types/Parsing/Syntax/Functions/ProgramNode.hpp
-        src/Types/Parsing/Syntax/Functions/FunctionNode.hpp
-        src/Types/Parsing/Syntax/Expressions/ConstantNode.hpp
-        src/Types/Parsing/Syntax/Expressions/ExpressionNode.hpp
-        src/Types/Parsing/Syntax/Statements/ReturnNode.hpp
-        src/Types/Parsing/Syntax/Statements/StatementNode.hpp
-        src/Types/Parsing/Syntax/Functions/Parameters.hpp
-        src/Types/Parsing/Syntax/Functions/ParameterNode.hpp
-        src/Types/Parsing/Syntax/Statements/BodyNode.hpp
-        src/Types/Lexing/TokenList.hpp
-        src/Types/Lexing/Tokens/Keyword.hpp
-        src/Types/Lexing/Tokens/Symbol.hpp
-        src/Types/Lexing/Tokens/Literal.hpp
-        src/Types/Lexing/Tokens/Identifier.hpp
-        src/Stages/CodeGenerator.hpp
-        src/Types/Parsing/Syntax/Expressions/UnaryOperatorNode.hpp
-        src/Types/Parsing/Syntax/Expressions/TermNode.hpp
-        src/Types/Parsing/Syntax/Expressions/FactorNode.hpp
+        src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.cpp
+        src/Types/Parsing/Syntax/Expressions/IOperator.cpp
+        src/Types/Parsing/Syntax/Statements/DeclarationNode.cpp
+        src/Types/Parsing/Syntax/Expressions/VariableNode.cpp
+        src/Types/Parsing/Syntax/Expressions/IVariable.cpp
+        src/Types/Parsing/Syntax/Statements/AssignmentNode.cpp
+        src/Types/Parsing/Syntax/Statements/ConditionalStatementNode.cpp
+        src/Types/Parsing/Syntax/Expressions/ConditionalExpressionNode.cpp
+        src/Types/SymbolMap.cpp
         )
-
 add_executable(CompilerProject ${SOURCE_FILES})
 
 set_target_properties(CompilerProject PROPERTIES

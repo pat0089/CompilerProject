@@ -6,6 +6,7 @@
 #include "../Types/Lexing/TokenList.hpp"
 #include "../Types/Parsing/Syntax/Expressions/TermNode.hpp"
 #include "../Types/Parsing/Syntax/Expressions/FactorNode.hpp"
+#include "../Types/SymbolMap.hpp"
 
 class UnexpectedTokenException : public std::exception {
 public:
@@ -19,8 +20,9 @@ private:
 
 class Parser {
 public:
+    ~Parser();
     void Parse(const TokenList & tokens);
-    std::unordered_map<std::string, FunctionInfoTable> FunctionMap() const;
+    const SymbolMap & Map() const;
     const AST & GetAST() const;
 
     static Token * _lastParsed;
@@ -32,10 +34,7 @@ public:
 
 private:
     AST _ast;
-    std::unordered_map<std::string, FunctionInfoTable> _functionMap;
-
-    //std::deque<Token> _tokens;
-    TokenList * _tokens;
+    SymbolMap _symbolMap;
 
     //thinking ahead for error detection and mitigation
     TokenList * _curList;

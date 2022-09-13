@@ -1,6 +1,17 @@
 #ifndef COMPILERPROJECT_CODEGENERATOR_HPP
 #define COMPILERPROJECT_CODEGENERATOR_HPP
 #include "../Types/Parsing/AST.hpp"
+#include "../Types/SymbolMap.hpp"
+
+class VariableException : public std::exception {
+public:
+    VariableException(const std::string & msg) : message("VariableException: " + msg) {}
+    const char * what() {
+        return message.c_str();
+    }
+private:
+    std::string message;
+};
 
 class CodeGenerator {
     //what does this do?
@@ -8,7 +19,7 @@ class CodeGenerator {
 public:
 
     void Generate(const AST & ast, const string & fname);
-    void FunctionMap(const std::unordered_map<std::string, FunctionInfoTable> & fmap);
+    void Map(const SymbolMap & smap);
 
 private:
 
@@ -78,7 +89,8 @@ private:
     std::string & CreateNewLabel();
     void MarkLabel(const std::string & label, std::ofstream & file);
 
-    std::unordered_map<std::string, FunctionInfoTable> _functionMap;
+    //std::unordered_map<std::string, FunctionInfoTable> _functionMap;
+    const SymbolMap * _symbolMap = nullptr;
 
     void HandleDeclaration(const DeclarationNode & dnode, std::ofstream &file);
     void HandleAssignment(const AssignmentNode & anode, std::ofstream &file);

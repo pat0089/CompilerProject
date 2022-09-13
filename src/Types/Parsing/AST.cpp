@@ -1,5 +1,8 @@
 #include "AST.hpp"
 
+AST::AST(): _head(nullptr) {}
+AST::~AST() { delete _head; }
+
 ProgramNode * AST::Program() const {
     return (ProgramNode*)_head;
 }
@@ -70,7 +73,3 @@ void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
             break;
     }
 }
-
-
-
-

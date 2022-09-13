@@ -10,6 +10,7 @@ class SyntaxNode {
 public:
 
     SyntaxNode();
+    virtual ~SyntaxNode();
     SyntaxNode(const SyntaxNode & node);
     explicit SyntaxNode(SyntaxType stype);
 

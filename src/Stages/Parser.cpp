@@ -16,8 +16,7 @@ const AST &Parser::GetAST() const {
 
 void Parser::Parse(const TokenList & tokens) {
     //create a copy of the token list to modify and parse as necessary
-    _tokens = new TokenList(tokens);
-    _curList = _tokens;
+    _curList = new TokenList(tokens);
     _verified = true;
     _ast.Program(ParseProgram());
 }
@@ -28,13 +27,14 @@ ProgramNode * Parser::ParseProgram() {
 
 FunctionNode * Parser::ParseMainFunction() {
 
-    (!IsNextToken(KeywordType::Int)) ? Fail(KeywordType::Int) : PopFront();
-    auto return_type = _lastParsed;
-    //check if function name is 'main'
-    (!IsNextToken(TokenType::Identifier)) ? Fail(TokenType::Identifier) : PopFront();
+    auto return_type = Front();
+    if (!IsTokenType(KeywordType::Int, return_type)) Fail(KeywordType::Int);
 
-    if (_lastParsed->GetRaw() != "main") Fail(false);
-    PutbackFront(_lastParsed);
+    //check if function name is 'main'
+    auto func_name = Front();
+    if (!IsTokenType(TokenType::Identifier, func_name)) Fail(TokenType::Identifier);
+    if (func_name->GetRaw() != "main") Fail(false);
+    PutbackFront(func_name);
     PutbackFront(return_type);
 
     return ParseFunction();
@@ -42,14 +42,21 @@ FunctionNode * Parser::ParseMainFunction() {
 
 FunctionNode * Parser::ParseFunction() {
 
-    (!IsNextToken(KeywordType::Int)) ? Fail(KeywordType::Int) : PopFront();
+    TryParse(KeywordType::Int);
 
-    (!IsNextToken(TokenType::Identifier)) ? Fail(TokenType::Identifier) : PopFront();
+    Identifier * name = nullptr;
 
-    _functionMap.insert(std::make_pair(_lastParsed->GetRaw(), FunctionInfoTable()));
-    _curFunction = _lastParsed->GetRaw();
+    if (!IsNextToken(TokenType::Identifier)) {
+        Fail(TokenType::Identifier);
+    } else {
+        name = (Identifier *)Front();
+    }
 
-    auto newFunction = new FunctionNode(_lastParsed->GetRaw());
+    _symbolMap.AddFunction(name->GetRaw(), true);
+    auto newFunction = new FunctionNode(name->GetRaw());
+
+    //DONT FORGET TO DELETE THE TOKENS YOU Front() OFF THE QUEUE:
+    delete name;
 
     auto params = ParseParameters();
 
@@ -61,30 +68,21 @@ FunctionNode * Parser::ParseFunction() {
     //parse body
     newFunction->Add(body);
 
-    _curFunction = "";
-
     return newFunction;
 }
 
 Parameters * Parser::ParseParameters() {
-    _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Close_Parenthesis));
-    (!IsNextToken(SymbolType::Open_Parenthesis)) ? Fail(SymbolType::Open_Parenthesis) : PopFront();
-
+    TryParse(SymbolType::Open_Parenthesis);
     auto newArgs = new Parameters();
     while (!IsNextToken(SymbolType::Close_Parenthesis)) {
         newArgs->Add(ParseParameter());
     }
-
-    (!IsNextToken(SymbolType::Close_Parenthesis)) ? Fail(SymbolType::Close_Parenthesis) : PopFront();
-
-    _curList = _tokens;
+    TryParse(SymbolType::Close_Parenthesis);
     return newArgs;
 }
 
 BodyNode * Parser::ParseBody() {
-    TokenList * context = _curList;
-    _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Close_Brace));
-    (!IsNextToken(SymbolType::Open_Brace)) ? Fail(SymbolType::Open_Brace) : PopFront();
+    TryParse(SymbolType::Open_Brace);
 
     auto newBody = new BodyNode();
 
@@ -93,9 +91,8 @@ BodyNode * Parser::ParseBody() {
         else newBody->Add(ParseDeclaration());
     }
 
-    (!IsNextToken(SymbolType::Close_Brace)) ? Fail(SymbolType::Close_Brace) : PopFront();
+    TryParse(SymbolType::Close_Brace);
 
-    _curList = context;
     return newBody;
 }
 
@@ -108,9 +105,6 @@ ParameterNode * Parser::ParseParameter() {
 StatementNode *Parser::ParseDeclaration() {
     StatementNode * toReturn;
 
-    TokenList * context = _curList;
-    _curList = List().SeekToPop(List().SeekToNextSymbol(SymbolType::Semicolon));
-
     PopFront();
     auto var_name = Front();
     ExpressionNode * option = nullptr;
@@ -119,34 +113,31 @@ StatementNode *Parser::ParseDeclaration() {
         option = ParseExpression();
     }
 
-    if (_functionMap[_curFunction].variables.find(var_name->GetRaw()) != _functionMap[_curFunction].variables.end()) {
-        throw UnexpectedTokenException("Variable Redefinition: " + var_name->GetRaw());
-    } else {
-        _functionMap[_curFunction].variables.insert(std::make_pair(var_name->GetRaw(), _functionMap[_curFunction].variables.size()));
-    }
+    _symbolMap.AddVariable(var_name->GetRaw());
 
     toReturn = new DeclarationNode(var_name->GetRaw(), option);
+
+    delete var_name;
 
     //DONT FORGET THE SEMICOLON
     TryParse(SymbolType::Semicolon);
 
-    _curList = context;
     return toReturn;
 }
 
 StatementNode * Parser::ParseStatement() {
-    StatementNode * toReturn;
+    StatementNode * toReturn = nullptr;
     if (IsNextToken(KeywordType::Return)) {
         //generate return statement
         PopFront();
 
-        _functionMap[_curFunction].containsReturn = true;
+        _symbolMap.ContainsReturn(true);
 
         toReturn = new ReturnNode(ParseExpression());
-    } else if (!IsNextToken(KeywordType::If)) {
+    } else if (!IsNextToken(KeywordType::If) && !IsNextToken(SymbolType::Open_Brace)) {
         auto temp = ParseExpression();
         toReturn = (StatementNode * )temp;
-    } else {
+    } else if (!IsNextToken(SymbolType::Open_Brace)) {
         PopFront();
         TryParse(SymbolType::Open_Parenthesis);
         auto exp = ParseExpression();
@@ -158,10 +149,23 @@ StatementNode * Parser::ParseStatement() {
             option = ParseStatement();
         }
         toReturn = new ConditionalStatementNode(exp, state, option);
+    } else {
+        PopFront();
+
+        auto newBody = new BodyNode();
+
+        while (!IsNextToken(SymbolType::Close_Brace)) {
+            if (!IsNextToken(KeywordType::Int)) newBody->Add(ParseStatement());
+            else newBody->Add(ParseDeclaration());
+        }
+
+        TryParse(SymbolType::Close_Brace);
+        toReturn = (StatementNode *)newBody;
     }
 
     //DONT FORGET THE SEMICOLON
-    if (toReturn->Type() != SyntaxType::Conditional_Statement) TryParse(SymbolType::Semicolon);
+    if (toReturn->Type() != SyntaxType::Conditional_Statement && toReturn->Type() != SyntaxType::Body)
+        TryParse(SymbolType::Semicolon);
     return toReturn;
 }
 
@@ -172,11 +176,12 @@ ExpressionNode * Parser::ParseExpression() {
             //parse assignment
             PopFront();
 
-            if (_functionMap[_curFunction].variables.find(var_name->GetRaw()) == _functionMap[_curFunction].variables.end()) {
+            if (_symbolMap.FindVariable(var_name->GetRaw()) == -1) {
                 throw UnexpectedTokenException("Variable Assignment before Declaration: " + var_name->GetRaw());
             }
 
             auto temp = new AssignmentNode(var_name->GetRaw(), ParseExpression());
+            delete var_name;
             return (ExpressionNode *)temp;
         } else {
             PutbackFront(var_name);
@@ -293,15 +298,19 @@ FactorNode *Parser::ParseFactor() {
         SymbolType stype = GetSymbolType(next);
         FactorNode * factor = ParseFactor();
         auto temp = new UnaryOperatorNode(stype, (ExpressionNode *)factor);
+        delete next;
         return (FactorNode *)temp;
     } else if (IsNextToken(TokenType::Literal)) {
-        auto temp = new ConstantNode((Literal *)Front());
+        auto tempToken = (Literal*)Front();
+        auto temp = new ConstantNode(tempToken);
+        delete tempToken;
         return (FactorNode *)temp;
     } else if (IsNextToken(TokenType::Identifier)) {
         auto tempToken = Front();
-        if (_functionMap[_curFunction].variables.find(tempToken->GetRaw()) == _functionMap[_curFunction].variables.end())
+        if (_symbolMap.FindVariable(tempToken->GetRaw()) == -1)
             throw UnexpectedTokenException("Variable used before Declaration: " + tempToken->GetRaw());
         auto temp = new VariableNode(tempToken->GetRaw());
+        delete tempToken;
         return (FactorNode *)temp;
     } else {
         Fail("Tried to parse Factor and Failed!!!");
@@ -334,18 +343,6 @@ bool Parser::IsTokenType(KeywordType ktype, Token * t) const {
     return false;
 }
 
-bool Parser::IsPrevToken(TokenType type) const {
-    return _lastParsed->Type() == type;
-}
-
-bool Parser::IsPrevToken(SymbolType stype) const {
-    return IsTokenType(stype, _lastParsed);
-}
-
-bool Parser::IsPrevToken(KeywordType ktype) const {
-    return IsTokenType(ktype, _lastParsed);
-}
-
 bool Parser::IsNextToken(TokenType type) const {
     return _curList->PeekType() == type;
 }
@@ -356,27 +353,6 @@ bool Parser::IsNextToken(SymbolType stype) const {
 
 bool Parser::IsNextToken(KeywordType ktype) const {
     return IsTokenType(ktype, _curList->PeekFront());
-}
-
-bool Parser::IsNextTokenAfter(TokenType type) {
-    auto temp = Front();
-    bool flag = IsNextToken(type);
-    PutbackFront(temp);
-    return flag;
-}
-
-bool Parser::IsNextTokenAfter(SymbolType stype) {
-    auto temp = Front();
-    bool flag = IsNextToken(stype);
-    PutbackFront(temp);
-    return flag;
-}
-
-bool Parser::IsNextTokenAfter(KeywordType ktype) {
-    auto temp = Front();
-    bool flag = IsNextToken(ktype);
-    PutbackFront(temp);
-    return flag;
 }
 
 SymbolType Parser::GetSymbolType(Token *t) const {
@@ -396,7 +372,7 @@ KeywordType Parser::GetKeywordType(Token *t) const {
 }
 
 void Parser::PopFront() {
-    _lastParsed = _curList->PopFront();
+    delete _curList->PopFront();
 }
 
 Token *Parser::PeekFront() {
@@ -474,6 +450,15 @@ void Parser::Fail(bool hasMain) {
                     case KeywordType::Return:
                         err << "return";
                         break;
+                    case KeywordType::If:
+                        err << "if";
+                        break;
+                    case KeywordType::Else:
+                        err << "else";
+                        break;
+                    case KeywordType::None:
+                    default:
+                        break;
                 }
                 err << "\"\n";
                 break;
@@ -517,9 +502,7 @@ bool Parser::Verify() {
 }
 
 Token *Parser::Front() {
-    auto temp = PeekFront();
-    PopFront();
-    return temp;
+    return _curList->PopFront();
 }
 
 bool Parser::IsUnaryOperation(Token * t) {
@@ -530,8 +513,8 @@ void Parser::PutbackFront(Token *t) {
     _curList->PutbackFront(t);
 }
 
-std::unordered_map<std::string, FunctionInfoTable> Parser::FunctionMap() const {
-    return _functionMap;
+const SymbolMap & Parser::Map() const {
+    return _symbolMap;
 }
 
 void Parser::TryParse(TokenType type) {
@@ -544,4 +527,8 @@ void Parser::TryParse(SymbolType stype) {
 
 void Parser::TryParse(KeywordType ktype) {
     IsNextToken(ktype) ? PopFront() : Fail(ktype);
+}
+
+Parser::~Parser() {
+    delete _curList;
 }

@@ -5,6 +5,7 @@
 class IVariable {
 public:
     explicit IVariable(const std::string & vname);
+    ~IVariable();
     std::string & GetVariableName() const;
 protected:
     std::string * _vname = nullptr;

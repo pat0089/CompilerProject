@@ -19,7 +19,7 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ofstream & file) {
             Generate(snode->Child(i), file);
         }
         //if function contains no return statement, return 0
-        if (!_functionMap[_curFunction].containsReturn)
+        if (_symbolMap->ContainsReturn())
         {
             ZeroOutRegister("eax", file);
             WriteFunctionEpilogue(file);
@@ -328,8 +328,8 @@ void CodeGenerator::WriteFunctionEpilogue(std::ofstream &file) {
     PopRegisterFromStack("ebp", file);
 }
 
-void CodeGenerator::FunctionMap(const std::unordered_map<std::string, FunctionInfoTable> &fmap) {
-    _functionMap = fmap;
+void CodeGenerator::Map(const SymbolMap &smap) {
+    _symbolMap = &smap;
 }
 
 void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::ofstream &file) {
@@ -338,13 +338,17 @@ void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::ofstrea
 }
 
 void CodeGenerator::HandleAssignment(const AssignmentNode &anode, std::ofstream &file) {
-    int stack_var = _functionMap[_curFunction].variables[anode.GetVariableName()] + 1;
+    int stack_var = _symbolMap->FindVariable(anode.GetVariableName());
     Movl("%eax, " + std::to_string(-4 * stack_var) + "(%ebp)", file);
 }
 
 void CodeGenerator::HandleVariable(const VariableNode &vnode, std::ofstream &file) {
-    int stack_var = _functionMap[_curFunction].variables[vnode.GetVariableName()] + 1;
-    Movl(std::to_string(-4 * stack_var) + "(%ebp), %eax", file);
+    int stack_var = _symbolMap->FindVariable(vnode.GetVariableName());
+    if (stack_var == -1) {
+        throw VariableException("Variable not in variable Map for referencing!");
+    } else {
+        Movl(std::to_string(-4 * stack_var) + "(%ebp), %eax", file);
+    }
 }
 
 void CodeGenerator::Movl(const string &statement, std::ofstream &file) {

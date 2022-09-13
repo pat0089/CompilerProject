@@ -21,8 +21,11 @@ public:
     //Factory function for Token subtypes
     static Token * Create(const std::string & rawString);
 
+    //copy constructor for derived members
+    virtual Token * Clone() = 0;
     Token(const Token & toCopy);
-    ~Token();
+
+    virtual ~Token();
 
     virtual std::string TypeString() const = 0;
 

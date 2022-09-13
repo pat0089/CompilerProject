@@ -122,3 +122,11 @@ std::string Symbol::GetString(SymbolType stype) {
             return "";
     }
 }
+
+Token *Symbol::Clone() {
+    return new Symbol(*this);
+}
+
+Symbol::Symbol(const Symbol &toCopy) : Token(toCopy) {
+    _symType = toCopy._symType;
+}
