@@ -12,19 +12,19 @@ public:
 class SymbolMap {
 public:
     SymbolMap();
+    SymbolMap(const SymbolMap & toCopy);
     ~SymbolMap();
 
     void AddFunction(const std::string & fname, bool setCur = false);
 
     int AddVariable(const std::string & vname);
+    int ChangeVariableContext(const std::string & vname, int value);
     int FindVariable(const std::string & vname) const;
 
     void ContainsReturn(bool val);
     bool ContainsReturn() const;
 
     static std::string CurrentFunction;
-
-
 private:
     std::unordered_map<std::string, FunctionInfoTable> * _functionMap = nullptr;
 };

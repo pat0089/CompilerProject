@@ -1,8 +1,7 @@
 #include <iostream>
-#include "src/Types/Lexing/Tokens/Token.hpp"
-#include "src/Compiler.hpp"
 #include <vector>
 #include <fstream>
+#include "src/Compiler.hpp"
 
 using std::cout;
 using std::cerr;
@@ -26,7 +25,7 @@ int main(int argc, char * argv[]) {
     try {
         Compiler.Parse();
         //cout << Compiler.GetAST();
-    } catch (ParsingException e) {
+    } catch (ParsingException & e) {
         cerr << e.what();
         exit(1);
     }
@@ -34,7 +33,7 @@ int main(int argc, char * argv[]) {
     auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
     try {
         Compiler.Generate(fnameWithoutFS);
-    } catch (CodeGenerationException e) {
+    } catch (CodeGenerationException & e) {
         cerr << e.what();
         exit(2);
     }

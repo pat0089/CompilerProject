@@ -19,7 +19,9 @@ std::ostream &operator<<(std::ostream &os, const AST &ast) {
 void AST::recursiveOutput(const SyntaxNode * snode, std::ostream &os, int layer) const {
     if (!snode) return;
     for (int i = 0; i < layer; i++) {
-        os << " ";
+        if (i < layer - 1) {
+            os << "|  ";
+        } else os << "`->";
     }
     outputNode(snode, os);
     for (int i = 0; i < snode->ChildCount(); i++) {

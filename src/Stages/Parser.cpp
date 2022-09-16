@@ -4,12 +4,6 @@
 using std::cerr;
 using std::endl;
 
-string Parser::_curFunction;
-Token * Parser::_lastParsed = nullptr;
-TokenType Parser::_expectedType = TokenType::None;
-SymbolType Parser::_expectedSymbolType = SymbolType::None;
-KeywordType Parser::_expectedKeyType = KeywordType::None;
-
 const AST &Parser::GetAST() const {
     return _ast;
 }
@@ -113,10 +107,6 @@ StatementNode *Parser::ParseDeclaration() {
         option = ParseExpression();
     }
 
-    if (_symbolMap.AddVariable(var_name->GetRaw()) == -1) {
-        throw ParsingException("Variable redefinition: " + var_name->GetRaw());
-    }
-
     toReturn = new DeclarationNode(var_name->GetRaw(), option);
 
     delete var_name;
@@ -152,17 +142,7 @@ StatementNode * Parser::ParseStatement() {
         }
         toReturn = new ConditionalStatementNode(exp, state, option);
     } else {
-        PopFront();
-
-        auto newBody = new BodyNode();
-
-        while (!IsNextToken(SymbolType::Close_Brace)) {
-            if (!IsNextToken(KeywordType::Int)) newBody->Add(ParseStatement());
-            else newBody->Add(ParseDeclaration());
-        }
-
-        TryParse(SymbolType::Close_Brace);
-        toReturn = (StatementNode *)newBody;
+        toReturn = (StatementNode *)ParseBody();
     }
 
     //DONT FORGET THE SEMICOLON
@@ -177,10 +157,6 @@ ExpressionNode * Parser::ParseExpression() {
         if (IsNextToken(SymbolType::Equals)) {
             //parse assignment
             PopFront();
-
-            if (_symbolMap.FindVariable(var_name->GetRaw()) == -1) {
-                throw ParsingException("Variable Assignment before Declaration: " + var_name->GetRaw());
-            }
 
             auto temp = new AssignmentNode(var_name->GetRaw(), ParseExpression());
             delete var_name;
@@ -332,8 +308,6 @@ FactorNode *Parser::ParseFactor() {
         return (FactorNode *)temp;
     } else if (IsNextToken(TokenType::Identifier)) {
         auto tempToken = Front();
-        if (_symbolMap.FindVariable(tempToken->GetRaw()) == -1)
-            throw ParsingException("Variable used before Declaration: " + tempToken->GetRaw());
         auto temp = new VariableNode(tempToken->GetRaw());
         delete tempToken;
         return (FactorNode *)temp;
@@ -405,17 +379,17 @@ Token *Parser::PeekFront() {
 }
 
 //fail should output a bit more information now
-void Parser::Fail(bool hasMain) {
+void Parser::Fail(bool hasMain, TokenType ttype, SymbolType stype, KeywordType ktype) {
     std::stringstream err;
     if (_verified) _verified = false;
     if (!hasMain) {
         cerr << "FAIL0!: No \'main\' function found\n";
     } else {
         err << "FAIL1!: Unexpected Token, Expected: ";
-        switch (_expectedType) {
+        switch (ttype) {
             case TokenType::Symbol:
                 err << "Symbol \'";
-                switch (_expectedSymbolType) {
+                switch (stype) {
                     case SymbolType::Semicolon:
                         err << ";";
                         break;
@@ -466,7 +440,7 @@ void Parser::Fail(bool hasMain) {
                 break;
             case TokenType::Keyword:
                 err << "Keyword \"";
-                switch (_expectedKeyType) {
+                switch (ktype) {
                     case KeywordType::Int:
                         err << "int";
                         break;
@@ -498,29 +472,19 @@ void Parser::Fail(bool hasMain) {
 }
 
 void Parser::Fail(TokenType type)  {
-    _expectedSymbolType = SymbolType::None;
-    _expectedKeyType = KeywordType::None;
-    _expectedType = type;
-    Fail();
+    Fail(true, type, SymbolType::None, KeywordType::None);
 }
 
 void Parser::Fail(SymbolType stype) {
-    _expectedType = TokenType::Symbol;
-    _expectedSymbolType = stype;
-    _expectedKeyType = KeywordType::None;
-    Fail();
+    Fail(true, TokenType::Symbol, stype, KeywordType::None);
 }
 
 void Parser::Fail(KeywordType ktype) {
-    _expectedType = TokenType::Keyword;
-    _expectedKeyType = ktype;
-    _expectedSymbolType = SymbolType::None;
-    Fail();
+    Fail(true, TokenType::Keyword, SymbolType::None, ktype);
 }
 
-bool Parser::_verified = true;
-
 bool Parser::Verify() {
+    if (SymbolMap::CurrentFunction == "main" && !_symbolMap.ContainsReturn()) Fail(false);
     return _verified;
 }
 
