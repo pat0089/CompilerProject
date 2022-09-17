@@ -54,11 +54,11 @@ SymbolMap::SymbolMap(const SymbolMap &toCopy) {
     _functionMap = new std::unordered_map<std::string, FunctionInfoTable>(*toCopy._functionMap);
 }
 
-int SymbolMap::ChangeVariableContext(const std::string &vname, int value) {
+int SymbolMap::RedeclareVariable(const std::string &vname) {
     if (_functionMap) {
-        if (FindVariable(vname)) {
-            _functionMap->at(CurrentFunction).variables[vname] = value;
-            return value;
+        if (FindVariable(vname) != -1) {
+            _functionMap->at(CurrentFunction).variables[vname] = (int)_functionMap->at(CurrentFunction).variables.size() + 1;
+            return (int)_functionMap->at(CurrentFunction).variables.size();
         }
     }
     return -1;

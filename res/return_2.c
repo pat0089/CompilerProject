@@ -1,5 +1,10 @@
-int main() {
-    int a = 1;
+int main(){
     int a = 2;
-    return a;
+    if (a < 3) {
+        {
+            int a = 3;
+            return a;
+        }
+        return a;
+    }
 }

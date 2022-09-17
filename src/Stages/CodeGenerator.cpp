@@ -359,7 +359,11 @@ void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::unorder
     if (current_context.find(dnode.GetVariableName()) != current_context.end()) {
         throw CodeGenerationException("Variable already declared in this scope: " + dnode.GetVariableName());
     } else {
-        _symbolMap->AddVariable(dnode.GetVariableName());
+        if (_symbolMap->FindVariable(dnode.GetVariableName()) == -1) {
+            _symbolMap->AddVariable(dnode.GetVariableName());
+        } else {
+            _symbolMap->RedeclareVariable(dnode.GetVariableName());
+        }
         current_context.insert(dnode.GetVariableName());
     }
     if (dnode.ChildCount()) Generate(dnode.Child(0), file);
@@ -431,7 +435,7 @@ void CodeGenerator::HandleConditionalExpression(const ConditionalExpressionNode 
 void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     SymbolMap * context = new SymbolMap(*_symbolMap);
 
-    auto curContext = std::unordered_set<std::string>();
+    auto curScope = std::unordered_set<std::string>();
     //go through the list of statements and declarations and handle them differently:
     //-pass Body the current symbol map if we encounter another compound statement for
     // other further declarations, assignments, and references
@@ -442,9 +446,8 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     // they don't need to use the symbol map or context set
     for (int i = 0; i < bnode.ChildCount(); i++) {
         auto child = bnode.Child(i);
-
         if (child->Type() == SyntaxType::Declaration) {
-            HandleDeclaration(*(DeclarationNode *)child, curContext, file);
+            HandleDeclaration(*(DeclarationNode *)child, curScope, file);
         } else {
             Generate(child, file);
         }
@@ -453,6 +456,10 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     //replace the context if we saved it
     delete _symbolMap;
     _symbolMap = context;
+    if (bnode.Parent().Type() != SyntaxType::Function) AddToRegister(curScope.size() * 4, "esp", file);
+}
 
+void CodeGenerator::AddToRegister(int value, const std::string reg, std::ostream &file) {
+    file << "\taddl\t$" << value << ", %" << reg << "\n";
 }
 
