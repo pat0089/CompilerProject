@@ -18,7 +18,7 @@ public:
     void AddFunction(const std::string & fname, bool setCur = false);
 
     int AddVariable(const std::string & vname);
-    int ChangeVariableContext(const std::string & vname, int value);
+    int RedeclareVariable(const std::string & vname);
     int FindVariable(const std::string & vname) const;
 
     void ContainsReturn(bool val);

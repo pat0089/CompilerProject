@@ -78,6 +78,7 @@ private:
     void SetIfGreaterThanOrEqual(const std::string & reg, std::ostream & file);
     void SetRegisterVal(const std::string & reg, int val, std::ostream & file);
     void CopyFromRegister(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void AddToRegister(int value, const std::string reg, std::ostream & file);
 
     void Movl(const std::string & statement, std::ostream & file);
 
