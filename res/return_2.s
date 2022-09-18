@@ -2,27 +2,30 @@
 main:
 	push	%ebp
 	movl	%esp, %ebp
-	movl	$2, %eax
+	movl	$1, %eax
+	push	%eax
+	movl	$0, %eax
 	push	%eax
 	movl	-4(%ebp), %eax
-	push	%eax
-	movl	$3, %eax
-	pop		%ecx
-	cmpl	%eax, %ecx
+	cmpl	$0, %eax
 	movl	$0, %eax
-	setl	%al
+	sete	%al
 	cmpl	$0, %eax
 	je		_lab0
-	movl	$3, %eax
-	push	%eax
 	movl	-8(%ebp), %eax
 	movl	%ebp, %esp
 	pop		%ebp
 	ret
-	addl	$4, %esp
+_lab0:
+	movl	-8(%ebp), %eax
+	cmpl	$0, %eax
+	je		_lab1
 	movl	-4(%ebp), %eax
 	movl	%ebp, %esp
 	pop		%ebp
 	ret
-	addl	$0, %esp
-_lab0:
+_lab1:
+	movl	$0, %eax
+	movl	%ebp, %esp
+	pop		%ebp
+	ret

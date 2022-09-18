@@ -78,6 +78,7 @@ void CodeGenerator::HandleFunction(const FunctionNode & fnode, std::ostream &fil
 }
 
 void CodeGenerator::HandleReturn(const ReturnNode & rnode, std::ostream &file) {
+    if (rnode.Parent().Parent().Type() == SyntaxType::Function && _symbolMap) _symbolMap->ContainsReturn(true);
     if (rnode.ChildCount()) Generate(rnode.Child(0), file);
     WriteFunctionEpilogue(file);
     WriteReturn(file);
@@ -453,13 +454,17 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
         }
     }
 
-    //replace the context if we saved it
+    //replace the context because we saved it
     delete _symbolMap;
     _symbolMap = context;
-    if (bnode.Parent().Type() != SyntaxType::Function) AddToRegister(curScope.size() * 4, "esp", file);
+    if (bnode.Parent().Type() != SyntaxType::Function && curScope.size()) AddToRegister(curScope.size() * 4, "esp", file);
 }
 
 void CodeGenerator::AddToRegister(int value, const std::string reg, std::ostream &file) {
     file << "\taddl\t$" << value << ", %" << reg << "\n";
+}
+
+CodeGenerator::~CodeGenerator() {
+    delete _symbolMap;
 }
 

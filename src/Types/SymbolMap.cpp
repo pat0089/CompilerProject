@@ -63,3 +63,8 @@ int SymbolMap::RedeclareVariable(const std::string &vname) {
     }
     return -1;
 }
+
+bool SymbolMap::FindFunction(const std::string &name) {
+    if (!_functionMap) return false;
+    return _functionMap->find(name) != _functionMap->end();
+}

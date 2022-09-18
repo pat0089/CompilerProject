@@ -1,10 +1,6 @@
-int main(){
-    int a = 2;
-    if (a < 3) {
-        {
-            int a = 3;
-            return a;
-        }
-        return a;
-    }
+int main() {
+    int a = 1;
+    int b = 0;
+    if (!a) return b;
+    if (b) return a;
 }

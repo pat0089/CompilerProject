@@ -122,9 +122,6 @@ StatementNode * Parser::ParseStatement() {
     if (IsNextToken(KeywordType::Return)) {
         //generate return statement
         PopFront();
-
-        _symbolMap.ContainsReturn(true);
-
         toReturn = new ReturnNode(ParseExpression());
     } else if (!IsNextToken(KeywordType::If) && !IsNextToken(SymbolType::Open_Brace)) {
         auto temp = ParseExpression();
@@ -144,7 +141,6 @@ StatementNode * Parser::ParseStatement() {
     } else {
         toReturn = (StatementNode *)ParseBody();
     }
-
     //DONT FORGET THE SEMICOLON
     if (toReturn->Type() != SyntaxType::Conditional_Statement && toReturn->Type() != SyntaxType::Body)
         TryParse(SymbolType::Semicolon);
@@ -484,7 +480,7 @@ void Parser::Fail(KeywordType ktype) {
 }
 
 bool Parser::Verify() {
-    if (SymbolMap::CurrentFunction == "main" && !_symbolMap.ContainsReturn()) Fail(false);
+    if (!_symbolMap.FindFunction("main")) Fail(false);
     return _verified;
 }
 

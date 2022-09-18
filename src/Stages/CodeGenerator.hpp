@@ -18,7 +18,7 @@ class CodeGenerator {
     //what does this do?
     // takes in an AST and generates the x86 assembly for it
 public:
-
+    ~CodeGenerator();
     void Generate(const AST & ast, const string & fname);
     void Map(const SymbolMap & smap);
 

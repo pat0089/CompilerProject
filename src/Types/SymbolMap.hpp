@@ -16,6 +16,7 @@ public:
     ~SymbolMap();
 
     void AddFunction(const std::string & fname, bool setCur = false);
+    bool FindFunction(const std::string &name);
 
     int AddVariable(const std::string & vname);
     int RedeclareVariable(const std::string & vname);
@@ -25,6 +26,7 @@ public:
     bool ContainsReturn() const;
 
     static std::string CurrentFunction;
+
 private:
     std::unordered_map<std::string, FunctionInfoTable> * _functionMap = nullptr;
 };
