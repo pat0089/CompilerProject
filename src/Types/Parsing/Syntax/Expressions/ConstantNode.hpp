@@ -6,6 +6,7 @@
 class ConstantNode : public ExpressionNode {
 public:
     ConstantNode();
+    ~ConstantNode();
     explicit ConstantNode(int toInit);
     explicit ConstantNode(Literal * lit);
     int & Value() const;

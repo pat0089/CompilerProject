@@ -9,6 +9,7 @@ using std::ostream;
 using std::istream;
 
 Token::Token() : _readCharacters(nullptr), _tokenType(TokenType::None) { }
+Token::~Token() { delete _readCharacters; }
 
 Token::Token(const string & chars) {
     _readCharacters = new string(chars);
@@ -34,10 +35,7 @@ bool Token::operator==(const Token &token) const {
     return (GetRaw() == token.GetRaw());
 }
 
-Token::Token(const Token &toCopy) {
-    _readCharacters = new string(toCopy.GetRaw());
-    _tokenType = GetType(toCopy.GetRaw());
-}
+Token::Token(const Token &toCopy) : _readCharacters(new string(*toCopy._readCharacters)), _tokenType(toCopy._tokenType) {}
 
 Token * Token::Create(const string & rawString) {
     switch (GetType(rawString)) {
@@ -53,10 +51,6 @@ Token * Token::Create(const string & rawString) {
         default:
             return nullptr;
     }
-}
-
-Token::~Token() {
-    delete _readCharacters;
 }
 
 TokenType Token::GetType(const string &rawString) {

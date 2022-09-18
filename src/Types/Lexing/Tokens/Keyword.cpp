@@ -25,3 +25,13 @@ KeywordType Keyword::GetKeyType(const string & rawString) {
     }
     return KeywordType::None;
 }
+
+Token *Keyword::Clone() {
+    return new Keyword(*this);
+}
+
+Keyword::Keyword(const Keyword &toCopy) : Token(toCopy) {
+    _keyType = toCopy._keyType;
+}
+
+Keyword::~Keyword() {}

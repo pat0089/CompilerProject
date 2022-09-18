@@ -48,7 +48,7 @@ Compiler::~Compiler() {
 void Compiler::Generate(const std::string & fname) {
     if (_lexer->Verify() && _parser->Verify()) {
         //pass the function map information over to the code generator
-        _codeGenerator->FunctionMap(_parser->FunctionMap());
+        _codeGenerator->Map(_parser->Map());
         _codeGenerator->Generate(_parser->GetAST(), fname + ".s");
     }
 }

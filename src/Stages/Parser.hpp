@@ -4,12 +4,14 @@
 #include "../Types/Parsing/AST.hpp"
 #include "../Types/Parsing/Syntax/ParsedNodes.hpp"
 #include "../Types/Lexing/TokenList.hpp"
+#include "../Types/Lexing/Tokens.hpp"
 #include "../Types/Parsing/Syntax/Expressions/TermNode.hpp"
 #include "../Types/Parsing/Syntax/Expressions/FactorNode.hpp"
+#include "../Types/SymbolMap.hpp"
 
-class UnexpectedTokenException : public std::exception {
+class ParsingException : public std::exception {
 public:
-    UnexpectedTokenException(const std::string & msg) : message("UnexpectedTokenException: " + msg) {}
+    ParsingException(const std::string & msg) : message("ParsingException: " + msg) {}
     const char * what() {
         return message.c_str();
     }
@@ -19,23 +21,16 @@ private:
 
 class Parser {
 public:
+    ~Parser();
     void Parse(const TokenList & tokens);
-    std::unordered_map<std::string, FunctionInfoTable> FunctionMap() const;
+    const SymbolMap & Map() const;
     const AST & GetAST() const;
 
-    static Token * _lastParsed;
-    static TokenType _expectedType;
-    static KeywordType _expectedKeyType;
-    static SymbolType _expectedSymbolType;
-
-    static bool Verify();
+    bool Verify();
 
 private:
     AST _ast;
-    std::unordered_map<std::string, FunctionInfoTable> _functionMap;
-
-    //std::deque<Token> _tokens;
-    TokenList * _tokens;
+    SymbolMap _symbolMap;
 
     //thinking ahead for error detection and mitigation
     TokenList * _curList;
@@ -65,10 +60,10 @@ private:
 
 
 
-    static void Fail(bool hasMain = true);
-    static void Fail(TokenType type);
-    static void Fail(SymbolType stype);
-    static void Fail(KeywordType ktype);
+    void Fail(bool hasMain = true, TokenType ttype = TokenType::None, SymbolType stype = SymbolType::None, KeywordType ktype = KeywordType::None);
+    void Fail(TokenType type);
+    void Fail(SymbolType stype);
+    void Fail(KeywordType ktype);
 
 
     TokenList & List();
@@ -77,17 +72,9 @@ private:
     void PutbackFront(Token * t);
     Token * Front();
 
-    bool IsPrevToken(TokenType type) const;
-    bool IsPrevToken(SymbolType stype) const;
-    bool IsPrevToken(KeywordType ktype) const;
-
     bool IsNextToken(TokenType type) const;
     bool IsNextToken(SymbolType stype) const;
     bool IsNextToken(KeywordType ktype) const;
-
-    bool IsNextTokenAfter(TokenType type);
-    bool IsNextTokenAfter(SymbolType stype);
-    bool IsNextTokenAfter(KeywordType ktype);
 
     bool IsTokenType(TokenType type, Token * t) const;
     bool IsTokenType(SymbolType stype, Token * t) const;
@@ -102,8 +89,7 @@ private:
 
     bool IsUnaryOperation(Token * t);
 
-    static bool _verified;
-    static string _curFunction;
+    bool _verified = true;
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP

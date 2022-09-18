@@ -1,8 +1,6 @@
 int main() {
-    int a = 0;
-    if (a)
-        a = 1;
-    else
-        a = 2;
-    return a;
+    int a = 1;
+    int b = 0;
+    if (!a) return b;
+    if (b) return a;
 }

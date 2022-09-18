@@ -2,6 +2,7 @@
 using std::string;
 
 FunctionNode::FunctionNode() : SyntaxNode(SyntaxType::Function), _name(new string()) {}
+FunctionNode::~FunctionNode() { delete _name; }
 
 FunctionNode::FunctionNode(string toInit) : SyntaxNode(SyntaxType::Function) {
     _name = new string(toInit);

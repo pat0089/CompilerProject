@@ -11,16 +11,20 @@ const regex Lexer::isIdentifier = regex("[_a-zA-Z][_a-zA-Z0-9]{0,30}");
 const regex Lexer::isLiteral = regex("[0-9]+");
 const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\<|\>|\[|\]|\;|\+|\-|\*|\/|\=|\~|\!|\||\&|\:|\?)");
 
+Lexer::Lexer() {
+    _tokens = new TokenList();
+}
+
+Lexer::~Lexer() {
+    delete _tokens;
+}
+
 void Lexer::Lex(istream & is) {
     is >> *_tokens;
 }
 
 const TokenList & Lexer::GetList() const {
     return *_tokens;
-}
-
-Lexer::Lexer() {
-    _tokens = new TokenList();
 }
 
 istream &operator>>(istream &is, Lexer &lexer) {
@@ -71,10 +75,6 @@ string Lexer::LexNextToken(istream & is) {
     while (isspace(is.peek()) && !is.eof()) { is.get(cur); }
 
     return toTokenize;
-}
-
-Lexer::~Lexer() {
-    delete _tokens;
 }
 
 bool Lexer::Verify() {

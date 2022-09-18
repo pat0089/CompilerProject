@@ -1,93 +1,111 @@
 #ifndef COMPILERPROJECT_CODEGENERATOR_HPP
 #define COMPILERPROJECT_CODEGENERATOR_HPP
+#include <unordered_set>
 #include "../Types/Parsing/AST.hpp"
+#include "../Types/SymbolMap.hpp"
+
+class CodeGenerationException : public std::exception {
+public:
+    explicit CodeGenerationException(const std::string & msg) : message("CodeGenerationException: " + msg) {}
+    const char * what() {
+        return message.c_str();
+    }
+private:
+    std::string message;
+};
 
 class CodeGenerator {
     //what does this do?
     // takes in an AST and generates the x86 assembly for it
 public:
-
+    ~CodeGenerator();
     void Generate(const AST & ast, const string & fname);
-    void FunctionMap(const std::unordered_map<std::string, FunctionInfoTable> & fmap);
+    void Map(const SymbolMap & smap);
 
 private:
 
     //recursive generate call
-    void Generate(SyntaxNode * snode, std::ofstream & file);
+    void Generate(SyntaxNode * snode, std::ostream & file);
 
     //write higher programmatic constructs
-    void WriteFunction(FunctionNode & fnode, std::ofstream & file);
-    void WriteFunctionPrologue(std::ofstream & file);
-    void WriteFunctionEpilogue(std::ofstream & file);
-    void WriteReturn(std::ofstream & file);
+    void WriteFunctionName(const FunctionNode & fnode, std::ostream & file);
+    void WriteFunctionPrologue(std::ostream & file);
+    void WriteFunctionEpilogue(std::ostream & file);
+    void WriteReturn(std::ostream & file);
 
     //register operations
-    void WriteToRegister(const std::string & reg, ConstantNode & cnode, std::ofstream & file);
-    void SwapRegisters(const std::string & reg1, const std::string & reg2, std::ofstream & file);
+    void HandleConstant(ConstantNode &cnode, std::ostream &file);
+    void SwapRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
 
     //unary operators
-    void NegateRegister(const std::string & reg, std::ofstream & file);
-    void LogicalNegateRegister(const std::string & reg, std::ofstream & file);
-    void BitwiseComplementRegister(const std::string & reg, std::ofstream &file);
+    void NegateRegister(const std::string & reg, std::ostream & file);
+    void LogicalNegateRegister(const std::string & reg, std::ostream & file);
+    void BitwiseComplementRegister(const std::string & reg, std::ostream &file);
 
     //binary operators
-    void AddRegisters(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void SubtractRegisters(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void DivideRegisters(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void MultiplyRegisters(const std::string & reg1, const std::string & reg2, std::ofstream & file);
+    void AddRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void SubtractRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void DivideRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void MultiplyRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
 
-    void CompareEqual(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void CompareNotEqual(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void CompareGreaterThan(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void CompareLessThan(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void CompareGreaterThanOrEqual(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void CompareLessThanOrEqual(const std::string & reg1, const std::string & reg2, std::ofstream & file);
+    void CompareEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void CompareNotEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void CompareGreaterThan(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void CompareLessThan(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void CompareGreaterThanOrEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void CompareLessThanOrEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
 
 
     //stack operations
-    void PushRegisterToStack(const std::string & reg, std::ofstream & file);
-    void PopRegisterFromStack(const std::string & reg, std::ofstream & file);
+    void PushRegisterToStack(const std::string & reg, std::ostream & file);
+    void PopRegisterFromStack(const std::string & reg, std::ostream & file);
 
     //helper handler functions
-    void HandleUnaryOperator(UnaryOperatorNode &uonode, std::ofstream & file);
-    void HandleBinaryOperator(const BinaryOperatorNode & bonode, std::ofstream & file);
+    void HandleUnaryOperator(UnaryOperatorNode &uonode, std::ostream & file);
+    void HandleBinaryOperator(const BinaryOperatorNode & bonode, std::ostream & file);
 
 
     //helper single-line functions
-    void ZeroOutRegister(const std::string & reg, std::ofstream & file);
-    void CompareRegisters(const std::string & reg1, const std::string & reg2, std::ofstream & file);
-    void CompareRegisterVal(const std::string & reg, int val, std::ofstream & file);
-    void CompareWithZero(const std::string & reg, std::ofstream & file);
-    void SetIfEqual(const std::string & reg, std::ofstream & file);
-    void SetIfNotEqual(const std::string & reg, std::ofstream & file);
-    void SetIfLessThan(const std::string & reg, std::ofstream & file);
-    void SetIfGreaterThan(const std::string & reg, std::ofstream & file);
-    void SetIfLessThanOrEqual(const std::string & reg, std::ofstream & file);
-    void SetIfGreaterThanOrEqual(const std::string & reg, std::ofstream & file);
-    void SetRegisterVal(const std::string & reg, int val, std::ofstream & file);
-    void CopyFromRegister(const std::string & reg1, const std::string & reg2, std::ofstream & file);
+    void ZeroOutRegister(const std::string & reg, std::ostream & file);
+    void CompareRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void CompareRegisterVal(const std::string & reg, int val, std::ostream & file);
+    void CompareWithZero(const std::string & reg, std::ostream & file);
+    void SetIfEqual(const std::string & reg, std::ostream & file);
+    void SetIfNotEqual(const std::string & reg, std::ostream & file);
+    void SetIfLessThan(const std::string & reg, std::ostream & file);
+    void SetIfGreaterThan(const std::string & reg, std::ostream & file);
+    void SetIfLessThanOrEqual(const std::string & reg, std::ostream & file);
+    void SetIfGreaterThanOrEqual(const std::string & reg, std::ostream & file);
+    void SetRegisterVal(const std::string & reg, int val, std::ostream & file);
+    void CopyFromRegister(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void AddToRegister(int value, const std::string reg, std::ostream & file);
 
-    void Movl(const std::string & statement, std::ofstream & file);
+    void Movl(const std::string & statement, std::ostream & file);
 
-    void JumpUnconditional(const std::string & label, std::ofstream & file);
-    void JumpIfEqual(const std::string & label, std::ofstream & file);
-    void JumpIfNotEqual(const std::string & label, std::ofstream & file);
+    void JumpUnconditional(const std::string & label, std::ostream & file);
+    void JumpIfEqual(const std::string & label, std::ostream & file);
+    void JumpIfNotEqual(const std::string & label, std::ostream & file);
 
     //label functions
     static int _labelCount;
-    std::string & CreateNewLabel();
-    void MarkLabel(const std::string & label, std::ofstream & file);
+    std::string CreateNewLabel();
+    void MarkLabel(const std::string & label, std::ostream & file);
 
-    std::unordered_map<std::string, FunctionInfoTable> _functionMap;
+    //std::unordered_map<std::string, FunctionInfoTable> _functionMap;
+    SymbolMap * _symbolMap = nullptr;
 
-    void HandleDeclaration(const DeclarationNode & dnode, std::ofstream &file);
-    void HandleAssignment(const AssignmentNode & anode, std::ofstream &file);
-    void HandleVariable(const VariableNode & vnode, std::ofstream &file);
+    void HandleDeclaration(const DeclarationNode & dnode, std::unordered_set<std::string> & current_context, std::ostream &file);
+    void HandleAssignment(const AssignmentNode & anode, std::ostream &file);
+    void HandleVariable(const VariableNode & vnode, std::ostream &file);
 
-    void HandleConditionalStatement(const ConditionalStatementNode & csnode, std::ofstream &file);
-    void HandleConditionalExpression(const ConditionalExpressionNode & cenode, std::ofstream &file);
+    void HandleConditionalStatement(const ConditionalStatementNode & csnode, std::ostream &file);
+    void HandleConditionalExpression(const ConditionalExpressionNode & cenode, std::ostream &file);
 
-    static std::string _curFunction;
+    void HandleFunction(const FunctionNode & fnode, std::ostream &file);
+
+    void HandleBody(const BodyNode & bnode, std::ostream &file);
+
+    void HandleReturn(const ReturnNode & rnode, std::ostream &file);
 };
 
 

@@ -163,3 +163,11 @@ bool SyntaxNode::ContainsChildType(SyntaxType stype) const {
     }
     return false;
 }
+
+SyntaxNode::~SyntaxNode() {
+    while (_childCount > 0) {
+        delete _children[_childCount - 1];
+        _childCount--;
+    }
+    delete[] _children;
+}
