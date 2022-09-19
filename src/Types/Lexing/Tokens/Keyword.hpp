@@ -2,7 +2,7 @@
 #define COMPILERPROJECT_KEYWORD_HPP
 #include "Token.hpp"
 
-enum class KeywordType { None, Return, Int, If, Else };
+enum class KeywordType { None, Return, Int, If, Else, For, While, Do, Break, Continue };
 
 class Keyword : public Token {
 public:

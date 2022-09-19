@@ -16,14 +16,10 @@ int main(int argc, char * argv[]) {
 
     std::ifstream fin(fname);
     Compiler.Lex(fin);
-    //cout << "Split by tokens:" << endl;
-    //
-    //cout << Compiler.GetLexer();
-    //
-    // cout << endl << "********************" << endl;
+    cout << Compiler.GetLexer();
 
     try {
-        Compiler.Parse();
+        //Compiler.Parse();
         //cout << Compiler.GetAST();
     } catch (ParsingException & e) {
         cerr << e.what();
@@ -32,13 +28,13 @@ int main(int argc, char * argv[]) {
 
     auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
     try {
-        Compiler.Generate(fnameWithoutFS);
+        //Compiler.Generate(fnameWithoutFS);
     } catch (CodeGenerationException & e) {
         cerr << e.what();
         exit(2);
     }
 
-    std::system(std::string("gcc -m32 " + fnameWithoutFS + ".s -o " + fnameWithoutFS).c_str());
+    //std::system(std::string("gcc -m32 " + fnameWithoutFS + ".s -o " + fnameWithoutFS).c_str());
 
     return 0;
 }
