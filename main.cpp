@@ -16,11 +16,11 @@ int main(int argc, char * argv[]) {
 
     std::ifstream fin(fname);
     Compiler.Lex(fin);
-    cout << Compiler.GetLexer();
+    //cout << Compiler.GetLexer();
 
     try {
-        //Compiler.Parse();
-        //cout << Compiler.GetAST();
+        Compiler.Parse();
+        cout << Compiler.GetAST();
     } catch (ParsingException & e) {
         cerr << e.what();
         exit(1);

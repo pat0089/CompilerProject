@@ -123,10 +123,11 @@ StatementNode * Parser::ParseStatement() {
         //generate return statement
         PopFront();
         toReturn = new ReturnNode(ParseExpression());
-    } else if (!IsNextToken(KeywordType::If) && !IsNextToken(SymbolType::Open_Brace)) {
-        auto temp = ParseExpression();
+    } else if (!IsNextToken(TokenType::Keyword) && !IsNextToken(SymbolType::Open_Brace)) {
+        auto temp = ParseOptionalExpression();
         toReturn = (StatementNode * )temp;
-    } else if (!IsNextToken(SymbolType::Open_Brace)) {
+    } else if (IsNextToken(KeywordType::If)) {
+        //conditional statement
         PopFront();
         TryParse(SymbolType::Open_Parenthesis);
         auto exp = ParseExpression();
@@ -138,13 +139,64 @@ StatementNode * Parser::ParseStatement() {
             option = ParseStatement();
         }
         toReturn = new ConditionalStatementNode(exp, state, option);
-    } else {
+    } else if (IsNextToken(SymbolType::Open_Brace)) {
+        //braced scope
         toReturn = (StatementNode *)ParseBody();
+    } else {
+        //check for loop keywords
+        auto temp = (Keyword *)Front();
+        if (temp->Type() != TokenType::Keyword) Fail(TokenType::Keyword);
+
+        //for loop
+        if (temp->KeyType() == KeywordType::For) {
+            TryParse(SymbolType::Open_Parenthesis);
+            StatementNode *first = nullptr;
+            if (IsNextToken(KeywordType::Int)) {
+                first = ParseDeclaration();
+            } else {
+                first = ParseOptionalExpression();
+            }
+            if (first->Type() != SyntaxType::Declaration) TryParse(SymbolType::Semicolon);
+            auto second = ParseOptionalExpression();
+            TryParse(SymbolType::Semicolon);
+            auto third = ParseOptionalExpression();
+            TryParse(SymbolType::Close_Parenthesis);
+            auto for_statement = ParseStatement();
+            toReturn = new ForLoopNode(first, second, third, for_statement);
+        } else if (temp->KeyType() == KeywordType::While) {
+            TryParse(SymbolType::Open_Parenthesis);
+            auto exp = ParseExpression();
+            TryParse(SymbolType::Close_Parenthesis);
+            auto while_statement = ParseStatement();
+            toReturn = new WhileLoopNode(exp, while_statement);
+        } else if (temp->KeyType() == KeywordType::Do) {
+            auto do_statement = ParseStatement();
+            TryParse(KeywordType::While);
+            TryParse(SymbolType::Open_Parenthesis);
+            auto exp = ParseExpression();
+            TryParse(SymbolType::Close_Parenthesis);
+            toReturn = new DoWhileLoopNode(do_statement, exp);
+        } else if (temp->KeyType() == KeywordType::Break) {
+            toReturn = new BreakNode();
+        } else if (temp->KeyType() == KeywordType::Continue) {
+            toReturn = new ContinueNode();
+        } else {
+            throw ParsingException("Failed to parse Statement");
+        }
+        delete temp;
     }
     //DONT FORGET THE SEMICOLON
-    if (toReturn->Type() != SyntaxType::Conditional_Statement && toReturn->Type() != SyntaxType::Body)
+    if (toReturn->Type() != SyntaxType::Conditional_Statement && toReturn->Type() != SyntaxType::Body && toReturn->Type() != SyntaxType::While_Loop && toReturn->Type() != SyntaxType::For_Loop)
         TryParse(SymbolType::Semicolon);
     return toReturn;
+}
+
+ExpressionNode *Parser::ParseOptionalExpression() {
+    if (!IsNextToken(SymbolType::Semicolon) || !IsNextToken(SymbolType::Close_Parenthesis)) {
+        auto temp = ParseExpression();
+        if (temp) return temp;
+    }
+    return new ConstantNode(1);
 }
 
 ExpressionNode * Parser::ParseExpression() {
@@ -308,7 +360,6 @@ FactorNode *Parser::ParseFactor() {
         delete tempToken;
         return (FactorNode *)temp;
     } else {
-        Fail("Tried to parse Factor and Failed!!!");
         return nullptr;
     }
 }

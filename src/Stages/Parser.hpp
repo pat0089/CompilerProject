@@ -11,7 +11,7 @@
 
 class ParsingException : public std::exception {
 public:
-    ParsingException(const std::string & msg) : message("ParsingException: " + msg) {}
+    explicit ParsingException(const std::string & msg) : message("ParsingException: " + msg) {}
     const char * what() {
         return message.c_str();
     }
@@ -58,7 +58,7 @@ private:
     TermNode * ParseTerm();
     FactorNode * ParseFactor();
 
-
+    ExpressionNode * ParseOptionalExpression();
 
     void Fail(bool hasMain = true, TokenType ttype = TokenType::None, SymbolType stype = SymbolType::None, KeywordType ktype = KeywordType::None);
     void Fail(TokenType type);
