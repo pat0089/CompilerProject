@@ -56,7 +56,26 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
         case SyntaxType::Conditional_Expression:
             HandleConditionalExpression(*(ConditionalExpressionNode *)(snode), file);
             break;
+        case SyntaxType::For_Loop:
+            HandleForLoop(*(ForLoopNode *)(snode), file);
+            break;
+        case SyntaxType::While_Loop:
+            HandleWhileLoop(*(WhileLoopNode *)(snode), file);
+            break;
+        case SyntaxType::Do_While_Loop:
+            HandleDoWhileLoop(*(DoWhileLoopNode *)(snode), file);
+            break;
+        case SyntaxType::Break:
+            HandleBreak(*(BreakNode *)(snode), file);
+            break;
+        case SyntaxType::Continue:
+            HandleContinue(*(ContinueNode *)(snode), file);
+            break;
         case SyntaxType::None:
+        case SyntaxType::Expression:
+        case SyntaxType::Term:
+        case SyntaxType::Factor:
+        case SyntaxType::Declaration:
         default:
             break;
     }
@@ -207,7 +226,17 @@ void CodeGenerator::CompareWithZero(const string &reg, std::ostream &file) {
 }
 
 void CodeGenerator::HandleConstant(ConstantNode &cnode, std::ostream &file) {
-    SetRegisterVal("eax", cnode.Value(), file);
+    //generated constants with no context are null statements, so don't generate their values
+    switch (cnode.Parent().Type()) {
+        case SyntaxType::Body:
+        case SyntaxType::For_Loop:
+        case SyntaxType::While_Loop:
+        case SyntaxType::Do_While_Loop:
+            break;
+        default:
+            SetRegisterVal("eax", cnode.Value(), file);
+            break;
+    }
 }
 
 void CodeGenerator::SubtractRegisters(const string &reg1, const string &reg2, std::ostream &file) {
@@ -455,16 +484,139 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     }
 
     //replace the context because we saved it
+    if (_symbolMap->ContainsReturn()) context->ContainsReturn(true);
     delete _symbolMap;
     _symbolMap = context;
-    if (bnode.Parent().Type() != SyntaxType::Function && curScope.size()) AddToRegister(curScope.size() * 4, "esp", file);
+    if ((int)curScope.size() && bnode.Parent().Type() != SyntaxType::Function) AddToRegister((int)curScope.size() * 4, "esp", file);
 }
 
-void CodeGenerator::AddToRegister(int value, const std::string reg, std::ostream &file) {
+void CodeGenerator::AddToRegister(int value, const std::string & reg, std::ostream &file) {
     file << "\taddl\t$" << value << ", %" << reg << "\n";
 }
 
 CodeGenerator::~CodeGenerator() {
     delete _symbolMap;
+}
+
+void CodeGenerator::HandleContinue(const ContinueNode &cnode, std::ostream &file) {
+    if (!_beginLoop.empty() && _endLoopBody.empty()) {
+        JumpUnconditional(_beginLoop, file);
+    } else if (!_endLoopBody.empty()) {
+        JumpUnconditional(_endLoopBody, file);
+    } else {
+        throw CodeGenerationException("Break statement used outside of loop");
+    }
+}
+
+void CodeGenerator::HandleBreak(const BreakNode &bnode, std::ostream &file) {
+    if (!_endLoop.empty()) {
+        JumpUnconditional(_endLoop, file);
+    } else {
+        throw CodeGenerationException("Continue statement used outside of loop");
+    }
+}
+
+void CodeGenerator::HandleWhileLoop(const WhileLoopNode &wnode, std::ostream &file) {
+    auto first = _beginLoop;
+    auto second = _endLoop;
+
+    //allocate labels for loop
+    _beginLoop = CreateNewLabel();
+    _endLoop = CreateNewLabel();
+
+    MarkLabel(_beginLoop, file);
+
+    Generate(wnode.Child(0), file);
+    CompareWithZero("eax", file);
+    JumpIfEqual(_endLoop, file);
+
+    Generate(wnode.Child(1), file);
+
+    JumpUnconditional(_beginLoop, file);
+
+    MarkLabel(_endLoop, file);
+
+    //reset labels at end of loop
+    _beginLoop = first.empty() ? "": first;
+    _endLoop = second.empty() ? "": second;
+}
+
+void CodeGenerator::HandleDoWhileLoop(const DoWhileLoopNode &dwnode, std::ostream &file) {
+    auto first = _beginLoop;
+    auto second = _endLoop;
+
+    //allocate labels for loop
+    _beginLoop = CreateNewLabel();
+    _endLoop = CreateNewLabel();
+
+    MarkLabel(_beginLoop, file);
+
+    Generate(dwnode.Child(0), file);
+
+    Generate(dwnode.Child(1), file);
+    CompareWithZero("eax", file);
+    JumpIfEqual(_endLoop, file);
+
+    JumpUnconditional(_beginLoop, file);
+
+    MarkLabel(_endLoop, file);
+
+    //reset labels at end of loop
+    _beginLoop = first.empty() ? "": first;
+    _endLoop = second.empty() ? "": second;
+}
+
+void CodeGenerator::HandleForLoop(const ForLoopNode &fnode, std::ostream &file) {
+    //allocate labels for loop
+    auto first = _beginLoop;
+    auto second = _endLoop;
+    auto third = _endLoopBody;
+
+    _beginLoop = CreateNewLabel();
+    _endLoop = CreateNewLabel();
+    _endLoopBody = CreateNewLabel();
+
+    std::unordered_set<std::string> curScope;
+    SymbolMap * context = new SymbolMap(*_symbolMap);
+
+    if (fnode.Child(0)->Type() == SyntaxType::Declaration) {
+        HandleDeclaration(*(DeclarationNode *)fnode.Child(0), curScope, file);
+    } else {
+        Generate(fnode.Child(0), file);
+    }
+
+    MarkLabel(_beginLoop, file);
+
+    if (fnode.Child(1)->Type() == SyntaxType::Constant) {
+        //this is to override the no output default from empty statement
+        //so that for loops run forever if specified
+        SetRegisterVal("eax", 1, file);
+    } else {
+        Generate(fnode.Child(1), file);
+    }
+
+    CompareWithZero("eax", file);
+    JumpIfEqual(_endLoop, file);
+
+    Generate(fnode.Child(3), file);
+
+    //label the post-expression:
+    MarkLabel(_endLoopBody, file);
+    Generate(fnode.Child(2), file);
+
+    JumpUnconditional(_beginLoop, file);
+
+    MarkLabel(_endLoop, file);
+
+    if ((int)curScope.size()) AddToRegister((int)curScope.size() * 4, "esp", file);
+
+    //reset labels at end of loop
+    _beginLoop = first.empty() ? "": first;
+    _endLoop = second.empty() ? "": second;
+    _endLoopBody = third.empty() ? "": third;
+
+    delete _symbolMap;
+    _symbolMap = context;
+
 }
 
