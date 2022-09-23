@@ -96,7 +96,7 @@ private:
 
     std::string _beginLoop;
     std::string _endLoop;
-    string _endLoopBody;
+    std::string _endLoopBody;
 
     void HandleDeclaration(const DeclarationNode & dnode, std::unordered_set<std::string> & current_context, std::ostream &file);
     void HandleAssignment(const AssignmentNode & anode, std::ostream &file);
@@ -121,6 +121,9 @@ private:
 
     void HandleForLoop(const ForLoopNode &fnode, std::ostream &file);
 
+    void ModuloRegisters(const string &reg1, const string &reg2, std::ostream &file);
+
+    bool requires_swap(OperatorType otype);
 };
 
 

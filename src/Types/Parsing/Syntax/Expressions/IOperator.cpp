@@ -29,6 +29,8 @@ OperatorType IOperator::ConvertOperator(SymbolType stype1, SymbolType stype2, Sy
             if (stype2 == SymbolType::Equals) return OperatorType::Not_Equal;
         case SymbolType::Tilde:
             return OperatorType::Bitwise_Complement;
+        case SymbolType::Percent:
+            return OperatorType::Modulo;
         case SymbolType::None:
         default:
             return OperatorType::None;

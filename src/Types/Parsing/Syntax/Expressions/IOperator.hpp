@@ -8,7 +8,7 @@ enum class OperatorType { None,
         Minus, Addition, Multiplication, Division,
         AND, OR,
         Equal, Not_Equal, Less_Than, Less_Than_Or_Equal, Greater_Than, Greater_Than_Or_Equal,
-        Assignment
+        Assignment, Modulo
 };
 
 class IOperator {

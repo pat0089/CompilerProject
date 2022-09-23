@@ -151,10 +151,17 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
         return;
     }
 
-    Generate(bonode.Child(0), file);
-    PushRegisterToStack(r0, file);
-    Generate(bonode.Child(1), file);
-    PopRegisterFromStack(r1, file);
+    if (requires_swap(bonode.GetOperator())) {
+        Generate(bonode.Child(1), file);
+        PushRegisterToStack(r0, file);
+        Generate(bonode.Child(0), file);
+        PopRegisterFromStack(r1, file);
+    } else {
+        Generate(bonode.Child(0), file);
+        PushRegisterToStack(r0, file);
+        Generate(bonode.Child(1), file);
+        PopRegisterFromStack(r1, file);
+    }
 
     switch (bonode.GetOperator()) {
         case OperatorType::Addition:
@@ -165,6 +172,9 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
             break;
         case OperatorType::Division:
             DivideRegisters(r0, r1, file);
+            break;
+        case OperatorType::Modulo:
+            ModuloRegisters(r0, r1, file);
             break;
         case OperatorType::Multiplication:
             MultiplyRegisters(r0, r1, file);
@@ -196,12 +206,6 @@ void CodeGenerator::LogicalNegateRegister(const string &reg, std::ostream &file)
     CompareWithZero(reg, file);
     ZeroOutRegister(reg, file);
     SetIfEqual(reg, file);
-}
-
-void CodeGenerator::SwapRegisters(const string &reg1, const string &reg2, std::ostream &file) {
-    CopyFromRegister(reg1, "edx", file);
-    CopyFromRegister(reg2, reg1, file);
-    CopyFromRegister("edx", reg2, file);
 }
 
 void CodeGenerator::CompareEqual(const string &reg1, const string &reg2, std::ostream &file) {
@@ -240,16 +244,19 @@ void CodeGenerator::HandleConstant(ConstantNode &cnode, std::ostream &file) {
 }
 
 void CodeGenerator::SubtractRegisters(const string &reg1, const string &reg2, std::ostream &file) {
-    SwapRegisters(reg1, reg2, file);
     file << "\tsubl\t%" << reg2 << ", %"<< reg1 << "\n";
 }
 
 void CodeGenerator::DivideRegisters(const string &reg1, const string &reg2, std::ostream &file) {
-    SwapRegisters(reg1, reg2, file);
     file << "\tcdq\n";
     file << "\tidivl\t%" << reg2 << "\n";
 }
 
+
+void CodeGenerator::ModuloRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    DivideRegisters(reg1, reg2, file);
+    Movl("%edx, %" + reg1, file);
+}
 
 void CodeGenerator::WriteFunctionName(const FunctionNode & fnode, std::ostream & file) {
     file << ".globl " << fnode.Name() << "\n";
@@ -618,5 +625,9 @@ void CodeGenerator::HandleForLoop(const ForLoopNode &fnode, std::ostream &file) 
     delete _symbolMap;
     _symbolMap = context;
 
+}
+
+bool CodeGenerator::requires_swap(OperatorType otype) {
+    return otype == OperatorType::Minus || otype == OperatorType::Division || otype == OperatorType::Modulo;
 }
 

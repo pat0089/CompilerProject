@@ -325,7 +325,7 @@ ExpressionNode *Parser::ParseAdditiveExpression() {
 TermNode *Parser::ParseTerm() {
     TermNode * factor = ParseFactor();
 
-    while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash)) {
+    while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash) || IsNextToken(SymbolType::Percent)) {
         auto tempToken = Front();
         SymbolType op = GetSymbolType(tempToken);
         auto next_factor = ParseFactor();
