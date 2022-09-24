@@ -49,24 +49,32 @@ private:
     StatementNode * ParseStatement();
     StatementNode * ParseDeclaration();
     ExpressionNode * ParseExpression();
+    ExpressionNode * ParseOptionalExpression();
+
     ExpressionNode * ParseConditionalExpression();
+
     ExpressionNode * ParseLogicalOrExpression();
     ExpressionNode * ParseLogicalAndExpression();
+
+    ExpressionNode * ParseBitwiseOrExpression();
+    ExpressionNode * ParseBitwiseXorExpression();
+    ExpressionNode * ParseBitwiseAndExpression();
+
     ExpressionNode * ParseEqualityExpression();
     ExpressionNode * ParseRelationalExpression();
+
+    ExpressionNode * ParseBitwiseShiftExpression();
+
     ExpressionNode * ParseAdditiveExpression();
+
     TermNode * ParseTerm();
     FactorNode * ParseFactor();
-
-    ExpressionNode * ParseOptionalExpression();
 
     void Fail(bool hasMain = true, TokenType ttype = TokenType::None, SymbolType stype = SymbolType::None, KeywordType ktype = KeywordType::None);
     void Fail(TokenType type);
     void Fail(SymbolType stype);
     void Fail(KeywordType ktype);
 
-
-    TokenList & List();
     void PopFront();
     Token * PeekFront();
     void PutbackFront(Token * t);

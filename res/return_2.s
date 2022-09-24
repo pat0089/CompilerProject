@@ -2,13 +2,11 @@
 main:
 	push	%ebp
 	movl	%esp, %ebp
-	movl	$2, %eax
+	movl	$0, %eax
 	push	%eax
-	movl	$4, %eax
+	movl	$1, %eax
 	pop		%ecx
-	cdq
-	idivl	%ecx
-	movl	%edx, %eax
+	and		%ecx, %eax
 	movl	%ebp, %esp
 	pop		%ebp
 	ret

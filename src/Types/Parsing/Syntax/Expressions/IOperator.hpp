@@ -4,11 +4,11 @@
 #include "../../SyntaxNode.hpp"
 
 enum class OperatorType { None,
-        Bitwise_Complement, Logical_Negation, Negation,
-        Minus, Addition, Multiplication, Division,
-        AND, OR,
+        Bitwise_AND, Bitwise_XOR, Bitwise_OR, Bitwise_Complement, Bitwise_LShift, Bitwise_RShift,
+        Logical_Negation, Logical_AND, Logical_OR,
+        Negation, Minus, Addition, Multiplication, Division,
         Equal, Not_Equal, Less_Than, Less_Than_Or_Equal, Greater_Than, Greater_Than_Or_Equal,
-        Assignment, Modulo
+        Assignment, Modulo,
 };
 
 class IOperator {

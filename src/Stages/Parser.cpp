@@ -230,6 +230,8 @@ ExpressionNode *Parser::ParseConditionalExpression() {
     return conditional_expr;
 }
 
+
+
 ExpressionNode *Parser::ParseLogicalOrExpression() {
     ExpressionNode * logical_or_expr = ParseLogicalAndExpression();
 
@@ -250,7 +252,7 @@ ExpressionNode *Parser::ParseLogicalOrExpression() {
 }
 
 ExpressionNode *Parser::ParseLogicalAndExpression() {
-    ExpressionNode * logical_and_expr = ParseEqualityExpression();
+    ExpressionNode * logical_and_expr = ParseBitwiseOrExpression();
 
     while (IsNextToken(SymbolType::And)) {
         auto tempToken = Front();
@@ -260,12 +262,54 @@ ExpressionNode *Parser::ParseLogicalAndExpression() {
             PopFront();
             op2 = SymbolType::And;
         }
-        auto next_expr = ParseEqualityExpression();
+        auto next_expr = ParseBitwiseOrExpression();
         logical_and_expr = new BinaryOperatorNode(op, op2, logical_and_expr, next_expr);
         delete tempToken;
     }
 
     return logical_and_expr;
+}
+
+ExpressionNode *Parser::ParseBitwiseOrExpression() {
+    ExpressionNode * bitwise_or_expr = ParseBitwiseXorExpression();
+    while (IsNextToken(SymbolType::Vertical_Line)) {
+        auto temp = Front();
+        if (!IsNextToken(SymbolType::Vertical_Line)) {
+            auto next_expr = ParseBitwiseXorExpression();
+            bitwise_or_expr = new BinaryOperatorNode(SymbolType::Vertical_Line, SymbolType::None, bitwise_or_expr, next_expr);
+            delete temp;
+        } else {
+            PutbackFront(temp);
+            break;
+        }
+    }
+    return bitwise_or_expr;
+}
+
+ExpressionNode *Parser::ParseBitwiseXorExpression() {
+    ExpressionNode * bitwise_xor_expr = ParseBitwiseAndExpression();
+    while (IsNextToken(SymbolType::Carrot)) {
+        TryParse(SymbolType::Carrot);
+        auto next_expr = ParseBitwiseAndExpression();
+        bitwise_xor_expr = new BinaryOperatorNode(SymbolType::Carrot, SymbolType::None, bitwise_xor_expr, next_expr);
+    }
+    return bitwise_xor_expr;
+}
+
+ExpressionNode *Parser::ParseBitwiseAndExpression() {
+    ExpressionNode * bitwise_and_expr = ParseEqualityExpression();
+    while (IsNextToken(SymbolType::And)) {
+        auto temp = Front();
+        if (!IsNextToken(SymbolType::And)) {
+            auto next_expr = ParseEqualityExpression();
+            bitwise_and_expr = new BinaryOperatorNode(SymbolType::And, SymbolType::None, bitwise_and_expr, next_expr);
+            delete temp;
+        } else {
+            PutbackFront(temp);
+            break;
+        }
+    }
+    return bitwise_and_expr;
 }
 
 ExpressionNode *Parser::ParseEqualityExpression() {
@@ -290,7 +334,7 @@ ExpressionNode *Parser::ParseEqualityExpression() {
 }
 
 ExpressionNode *Parser::ParseRelationalExpression() {
-    ExpressionNode * relational_expr = ParseAdditiveExpression();
+    ExpressionNode * relational_expr = ParseBitwiseShiftExpression();
 
     while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
         auto tempToken = Front();
@@ -300,13 +344,36 @@ ExpressionNode *Parser::ParseRelationalExpression() {
             PopFront();
             op2 = SymbolType::Equals;
         }
-        auto next_expr = ParseAdditiveExpression();
+        auto next_expr = ParseBitwiseShiftExpression();
         relational_expr = new BinaryOperatorNode(op, op2, relational_expr, next_expr);
         delete tempToken;
     }
 
     return relational_expr;
 }
+
+ExpressionNode *Parser::ParseBitwiseShiftExpression() {
+    ExpressionNode * shift_expr = ParseAdditiveExpression();
+
+    while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
+        if (IsNextToken(SymbolType::Open_Chevron) && op == SymbolType::Open_Chevron ||
+            IsNextToken(SymbolType::Close_Chevron) && op == SymbolType::Close_Chevron)
+        {
+            PopFront();
+            auto next_expr = ParseAdditiveExpression();
+            shift_expr = new BinaryOperatorNode(op, op, shift_expr, next_expr);
+            delete tempToken;
+        } else {
+            PutbackFront(tempToken);
+            break;
+        }
+
+    }
+    return shift_expr;
+}
+
 
 ExpressionNode *Parser::ParseAdditiveExpression() {
     ExpressionNode * term = ParseTerm();
@@ -362,10 +429,6 @@ FactorNode *Parser::ParseFactor() {
     } else {
         return nullptr;
     }
-}
-
-TokenList &Parser::List() {
-    return *_curList;
 }
 
 bool Parser::IsTokenType(TokenType type, Token * t) const {

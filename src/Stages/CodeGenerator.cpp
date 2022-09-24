@@ -127,12 +127,12 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
     string r0 = "eax";
     string r1 = "ecx";
     auto op = bonode.GetOperator();
-    if (op == OperatorType::AND || op == OperatorType::OR) {
+    if (op == OperatorType::Logical_AND || op == OperatorType::Logical_OR) {
         auto jump = CreateNewLabel();
         auto end = CreateNewLabel();
         Generate(bonode.Child(0), file);
         CompareWithZero(r0, file);
-        if (op == OperatorType::AND) {
+        if (op == OperatorType::Logical_AND) {
             JumpIfNotEqual(jump, file);
             JumpUnconditional(end, file);
         } else {
@@ -197,7 +197,23 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
         case OperatorType::Greater_Than_Or_Equal:
             CompareGreaterThanOrEqual(r0, r1, file);
             break;
+        case OperatorType::Bitwise_AND:
+            BitwiseAndRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_XOR:
+            BitwiseXorRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_OR:
+            BitwiseOrRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_LShift:
+            BitwiseLShiftRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_RShift:
+            BitwiseRShiftRegisters(r0, r1, file);
+            break;
         default:
+        case OperatorType::None:
             break;
     }
 }
@@ -214,6 +230,25 @@ void CodeGenerator::CompareEqual(const string &reg1, const string &reg2, std::os
     SetIfEqual(reg1, file);
 }
 
+void CodeGenerator::BitwiseAndRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tand\t\t%" << reg2 << ", %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseOrRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tor\t\t%" << reg2 << ", %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseXorRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\txor\t\t%" << reg2 << ", %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseLShiftRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tshl\t\t%" << reg2[1] << "l, %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseRShiftRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tshr\t\t%" << reg2[1] << "l, %" << reg1 << "\n";
+}
 
 void CodeGenerator::CompareNotEqual(const string &reg1, const string &reg2, std::ostream &file) {
     CompareRegisters(reg1, reg2, file);
@@ -628,6 +663,7 @@ void CodeGenerator::HandleForLoop(const ForLoopNode &fnode, std::ostream &file) 
 }
 
 bool CodeGenerator::requires_swap(OperatorType otype) {
-    return otype == OperatorType::Minus || otype == OperatorType::Division || otype == OperatorType::Modulo;
+    return otype == OperatorType::Minus ||
+    otype == OperatorType::Division || otype == OperatorType::Modulo ||
+    otype == OperatorType::Bitwise_RShift || otype == OperatorType::Bitwise_LShift;
 }
-

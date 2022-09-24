@@ -55,6 +55,11 @@ private:
     void CompareGreaterThanOrEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
     void CompareLessThanOrEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
 
+    void BitwiseAndRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseOrRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseXorRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseLShiftRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseRShiftRegisters(const string &reg1, const string &reg2, std::ostream &file);
 
     //stack operations
     void PushRegisterToStack(const std::string & reg, std::ostream & file);
