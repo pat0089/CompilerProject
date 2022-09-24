@@ -59,6 +59,10 @@ SymbolType Symbol::GetSymType(const string & rawString) {
             return SymbolType::Vertical_Line;
         case '?':
             return SymbolType::Question_Mark;
+        case '^':
+            return SymbolType::Carrot;
+        case '%':
+            return SymbolType::Percent;
     }
     return SymbolType::None;
 }
@@ -117,6 +121,10 @@ std::string Symbol::GetString(SymbolType stype) {
             return "|";
         case SymbolType::Question_Mark:
             return "?";
+        case SymbolType::Carrot:
+            return "^";
+        case SymbolType::Percent:
+            return "%";
         case SymbolType::None:
         default:
             return "";

@@ -123,10 +123,11 @@ StatementNode * Parser::ParseStatement() {
         //generate return statement
         PopFront();
         toReturn = new ReturnNode(ParseExpression());
-    } else if (!IsNextToken(KeywordType::If) && !IsNextToken(SymbolType::Open_Brace)) {
-        auto temp = ParseExpression();
+    } else if (!IsNextToken(TokenType::Keyword) && !IsNextToken(SymbolType::Open_Brace)) {
+        auto temp = ParseOptionalExpression();
         toReturn = (StatementNode * )temp;
-    } else if (!IsNextToken(SymbolType::Open_Brace)) {
+    } else if (IsNextToken(KeywordType::If)) {
+        //conditional statement
         PopFront();
         TryParse(SymbolType::Open_Parenthesis);
         auto exp = ParseExpression();
@@ -138,13 +139,64 @@ StatementNode * Parser::ParseStatement() {
             option = ParseStatement();
         }
         toReturn = new ConditionalStatementNode(exp, state, option);
-    } else {
+    } else if (IsNextToken(SymbolType::Open_Brace)) {
+        //braced scope
         toReturn = (StatementNode *)ParseBody();
+    } else {
+        //check for loop keywords
+        auto temp = (Keyword *)Front();
+        if (temp->Type() != TokenType::Keyword) Fail(TokenType::Keyword);
+
+        //for loop
+        if (temp->KeyType() == KeywordType::For) {
+            TryParse(SymbolType::Open_Parenthesis);
+            StatementNode *first = nullptr;
+            if (IsNextToken(KeywordType::Int)) {
+                first = ParseDeclaration();
+            } else {
+                first = ParseOptionalExpression();
+            }
+            if (first->Type() != SyntaxType::Declaration) TryParse(SymbolType::Semicolon);
+            auto second = ParseOptionalExpression();
+            TryParse(SymbolType::Semicolon);
+            auto third = ParseOptionalExpression();
+            TryParse(SymbolType::Close_Parenthesis);
+            auto for_statement = ParseStatement();
+            toReturn = new ForLoopNode(first, second, third, for_statement);
+        } else if (temp->KeyType() == KeywordType::While) {
+            TryParse(SymbolType::Open_Parenthesis);
+            auto exp = ParseExpression();
+            TryParse(SymbolType::Close_Parenthesis);
+            auto while_statement = ParseStatement();
+            toReturn = new WhileLoopNode(exp, while_statement);
+        } else if (temp->KeyType() == KeywordType::Do) {
+            auto do_statement = ParseStatement();
+            TryParse(KeywordType::While);
+            TryParse(SymbolType::Open_Parenthesis);
+            auto exp = ParseExpression();
+            TryParse(SymbolType::Close_Parenthesis);
+            toReturn = new DoWhileLoopNode(do_statement, exp);
+        } else if (temp->KeyType() == KeywordType::Break) {
+            toReturn = new BreakNode();
+        } else if (temp->KeyType() == KeywordType::Continue) {
+            toReturn = new ContinueNode();
+        } else {
+            throw ParsingException("Failed to parse Statement");
+        }
+        delete temp;
     }
     //DONT FORGET THE SEMICOLON
-    if (toReturn->Type() != SyntaxType::Conditional_Statement && toReturn->Type() != SyntaxType::Body)
+    if (toReturn->Type() != SyntaxType::Conditional_Statement && toReturn->Type() != SyntaxType::Body && toReturn->Type() != SyntaxType::While_Loop && toReturn->Type() != SyntaxType::For_Loop)
         TryParse(SymbolType::Semicolon);
     return toReturn;
+}
+
+ExpressionNode *Parser::ParseOptionalExpression() {
+    if (!IsNextToken(SymbolType::Semicolon) || !IsNextToken(SymbolType::Close_Parenthesis)) {
+        auto temp = ParseExpression();
+        if (temp) return temp;
+    }
+    return new ConstantNode(1);
 }
 
 ExpressionNode * Parser::ParseExpression() {
@@ -178,6 +230,8 @@ ExpressionNode *Parser::ParseConditionalExpression() {
     return conditional_expr;
 }
 
+
+
 ExpressionNode *Parser::ParseLogicalOrExpression() {
     ExpressionNode * logical_or_expr = ParseLogicalAndExpression();
 
@@ -198,7 +252,7 @@ ExpressionNode *Parser::ParseLogicalOrExpression() {
 }
 
 ExpressionNode *Parser::ParseLogicalAndExpression() {
-    ExpressionNode * logical_and_expr = ParseEqualityExpression();
+    ExpressionNode * logical_and_expr = ParseBitwiseOrExpression();
 
     while (IsNextToken(SymbolType::And)) {
         auto tempToken = Front();
@@ -208,12 +262,54 @@ ExpressionNode *Parser::ParseLogicalAndExpression() {
             PopFront();
             op2 = SymbolType::And;
         }
-        auto next_expr = ParseEqualityExpression();
+        auto next_expr = ParseBitwiseOrExpression();
         logical_and_expr = new BinaryOperatorNode(op, op2, logical_and_expr, next_expr);
         delete tempToken;
     }
 
     return logical_and_expr;
+}
+
+ExpressionNode *Parser::ParseBitwiseOrExpression() {
+    ExpressionNode * bitwise_or_expr = ParseBitwiseXorExpression();
+    while (IsNextToken(SymbolType::Vertical_Line)) {
+        auto temp = Front();
+        if (!IsNextToken(SymbolType::Vertical_Line)) {
+            auto next_expr = ParseBitwiseXorExpression();
+            bitwise_or_expr = new BinaryOperatorNode(SymbolType::Vertical_Line, SymbolType::None, bitwise_or_expr, next_expr);
+            delete temp;
+        } else {
+            PutbackFront(temp);
+            break;
+        }
+    }
+    return bitwise_or_expr;
+}
+
+ExpressionNode *Parser::ParseBitwiseXorExpression() {
+    ExpressionNode * bitwise_xor_expr = ParseBitwiseAndExpression();
+    while (IsNextToken(SymbolType::Carrot)) {
+        TryParse(SymbolType::Carrot);
+        auto next_expr = ParseBitwiseAndExpression();
+        bitwise_xor_expr = new BinaryOperatorNode(SymbolType::Carrot, SymbolType::None, bitwise_xor_expr, next_expr);
+    }
+    return bitwise_xor_expr;
+}
+
+ExpressionNode *Parser::ParseBitwiseAndExpression() {
+    ExpressionNode * bitwise_and_expr = ParseEqualityExpression();
+    while (IsNextToken(SymbolType::And)) {
+        auto temp = Front();
+        if (!IsNextToken(SymbolType::And)) {
+            auto next_expr = ParseEqualityExpression();
+            bitwise_and_expr = new BinaryOperatorNode(SymbolType::And, SymbolType::None, bitwise_and_expr, next_expr);
+            delete temp;
+        } else {
+            PutbackFront(temp);
+            break;
+        }
+    }
+    return bitwise_and_expr;
 }
 
 ExpressionNode *Parser::ParseEqualityExpression() {
@@ -238,7 +334,7 @@ ExpressionNode *Parser::ParseEqualityExpression() {
 }
 
 ExpressionNode *Parser::ParseRelationalExpression() {
-    ExpressionNode * relational_expr = ParseAdditiveExpression();
+    ExpressionNode * relational_expr = ParseBitwiseShiftExpression();
 
     while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
         auto tempToken = Front();
@@ -248,13 +344,36 @@ ExpressionNode *Parser::ParseRelationalExpression() {
             PopFront();
             op2 = SymbolType::Equals;
         }
-        auto next_expr = ParseAdditiveExpression();
+        auto next_expr = ParseBitwiseShiftExpression();
         relational_expr = new BinaryOperatorNode(op, op2, relational_expr, next_expr);
         delete tempToken;
     }
 
     return relational_expr;
 }
+
+ExpressionNode *Parser::ParseBitwiseShiftExpression() {
+    ExpressionNode * shift_expr = ParseAdditiveExpression();
+
+    while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
+        auto tempToken = Front();
+        SymbolType op = GetSymbolType(tempToken);
+        if (IsNextToken(SymbolType::Open_Chevron) && op == SymbolType::Open_Chevron ||
+            IsNextToken(SymbolType::Close_Chevron) && op == SymbolType::Close_Chevron)
+        {
+            PopFront();
+            auto next_expr = ParseAdditiveExpression();
+            shift_expr = new BinaryOperatorNode(op, op, shift_expr, next_expr);
+            delete tempToken;
+        } else {
+            PutbackFront(tempToken);
+            break;
+        }
+
+    }
+    return shift_expr;
+}
+
 
 ExpressionNode *Parser::ParseAdditiveExpression() {
     ExpressionNode * term = ParseTerm();
@@ -273,7 +392,7 @@ ExpressionNode *Parser::ParseAdditiveExpression() {
 TermNode *Parser::ParseTerm() {
     TermNode * factor = ParseFactor();
 
-    while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash)) {
+    while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash) || IsNextToken(SymbolType::Percent)) {
         auto tempToken = Front();
         SymbolType op = GetSymbolType(tempToken);
         auto next_factor = ParseFactor();
@@ -308,13 +427,8 @@ FactorNode *Parser::ParseFactor() {
         delete tempToken;
         return (FactorNode *)temp;
     } else {
-        Fail("Tried to parse Factor and Failed!!!");
         return nullptr;
     }
-}
-
-TokenList &Parser::List() {
-    return *_curList;
 }
 
 bool Parser::IsTokenType(TokenType type, Token * t) const {

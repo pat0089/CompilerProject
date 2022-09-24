@@ -70,6 +70,25 @@ void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
         case SyntaxType::Conditional_Expression:
             os << *(ConditionalExpressionNode *)snode << "\n";
             break;
+        case SyntaxType::For_Loop:
+            os << *(ForLoopNode *)snode << "\n";
+            break;
+        case SyntaxType::While_Loop:
+            os << *(WhileLoopNode *)snode << "\n";
+            break;
+        case SyntaxType::Do_While_Loop:
+            os << *(DoWhileLoopNode *)snode << "\n";
+            break;
+        case SyntaxType::Break:
+            os << *(BreakNode *)snode << "\n";
+            break;
+        case SyntaxType::Continue:
+            os << *(ContinueNode *)snode << "\n";
+            break;
+        case SyntaxType::Statement:
+        case SyntaxType::Expression:
+        case SyntaxType::Term:
+        case SyntaxType::Factor:
         case SyntaxType::None:
         default:
             break;

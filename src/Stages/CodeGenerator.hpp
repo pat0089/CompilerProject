@@ -55,6 +55,11 @@ private:
     void CompareGreaterThanOrEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
     void CompareLessThanOrEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
 
+    void BitwiseAndRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseOrRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseXorRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseLShiftRegisters(const string &reg1, const string &reg2, std::ostream &file);
+    void BitwiseRShiftRegisters(const string &reg1, const string &reg2, std::ostream &file);
 
     //stack operations
     void PushRegisterToStack(const std::string & reg, std::ostream & file);
@@ -78,7 +83,7 @@ private:
     void SetIfGreaterThanOrEqual(const std::string & reg, std::ostream & file);
     void SetRegisterVal(const std::string & reg, int val, std::ostream & file);
     void CopyFromRegister(const std::string & reg1, const std::string & reg2, std::ostream & file);
-    void AddToRegister(int value, const std::string reg, std::ostream & file);
+    void AddToRegister(int value, const std::string & reg, std::ostream & file);
 
     void Movl(const std::string & statement, std::ostream & file);
 
@@ -88,11 +93,15 @@ private:
 
     //label functions
     static int _labelCount;
-    std::string CreateNewLabel();
+    static std::string CreateNewLabel();
     void MarkLabel(const std::string & label, std::ostream & file);
 
     //std::unordered_map<std::string, FunctionInfoTable> _functionMap;
     SymbolMap * _symbolMap = nullptr;
+
+    std::string _beginLoop;
+    std::string _endLoop;
+    std::string _endLoopBody;
 
     void HandleDeclaration(const DeclarationNode & dnode, std::unordered_set<std::string> & current_context, std::ostream &file);
     void HandleAssignment(const AssignmentNode & anode, std::ostream &file);
@@ -106,6 +115,20 @@ private:
     void HandleBody(const BodyNode & bnode, std::ostream &file);
 
     void HandleReturn(const ReturnNode & rnode, std::ostream &file);
+
+    void HandleContinue(const ContinueNode &cnode, std::ostream &file);
+
+    void HandleBreak(const BreakNode &bnode, std::ostream &file);
+
+    void HandleWhileLoop(const WhileLoopNode &wnode, std::ostream &file);
+
+    void HandleDoWhileLoop(const DoWhileLoopNode &dwnode, std::ostream &file);
+
+    void HandleForLoop(const ForLoopNode &fnode, std::ostream &file);
+
+    void ModuloRegisters(const string &reg1, const string &reg2, std::ostream &file);
+
+    bool requires_swap(OperatorType otype);
 };
 
 

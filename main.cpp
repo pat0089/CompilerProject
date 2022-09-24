@@ -16,11 +16,7 @@ int main(int argc, char * argv[]) {
 
     std::ifstream fin(fname);
     Compiler.Lex(fin);
-    //cout << "Split by tokens:" << endl;
-    //
     //cout << Compiler.GetLexer();
-    //
-    // cout << endl << "********************" << endl;
 
     try {
         Compiler.Parse();

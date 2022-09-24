@@ -22,6 +22,16 @@ KeywordType Keyword::GetKeyType(const string & rawString) {
         return KeywordType::If;
     } else if (rawString == "else") {
         return KeywordType::Else;
+    } else if (rawString == "for") {
+        return KeywordType::For;
+    } else if (rawString == "while") {
+        return KeywordType::While;
+    } else if (rawString == "do") {
+        return KeywordType::Do;
+    } else if (rawString == "break") {
+        return KeywordType::Break;
+    } else if (rawString == "continue") {
+        return KeywordType::Continue;
     }
     return KeywordType::None;
 }

@@ -12,6 +12,12 @@
 #include "Statements/ConditionalStatementNode.hpp"
 #include "Statements/ReturnNode.hpp"
 #include "Statements/BodyNode.hpp"
+#include "Statements/ForLoopNode.hpp"
+#include "Statements/WhileLoopNode.hpp"
+#include "Statements/DoWhileLoopNode.hpp"
+#include "Statements/BreakNode.hpp"
+#include "Statements/ContinueNode.hpp"
+
 
 #include "Expressions/ExpressionNode.hpp"
 #include "Expressions/ConstantNode.hpp"

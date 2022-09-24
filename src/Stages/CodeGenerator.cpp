@@ -56,7 +56,26 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
         case SyntaxType::Conditional_Expression:
             HandleConditionalExpression(*(ConditionalExpressionNode *)(snode), file);
             break;
+        case SyntaxType::For_Loop:
+            HandleForLoop(*(ForLoopNode *)(snode), file);
+            break;
+        case SyntaxType::While_Loop:
+            HandleWhileLoop(*(WhileLoopNode *)(snode), file);
+            break;
+        case SyntaxType::Do_While_Loop:
+            HandleDoWhileLoop(*(DoWhileLoopNode *)(snode), file);
+            break;
+        case SyntaxType::Break:
+            HandleBreak(*(BreakNode *)(snode), file);
+            break;
+        case SyntaxType::Continue:
+            HandleContinue(*(ContinueNode *)(snode), file);
+            break;
         case SyntaxType::None:
+        case SyntaxType::Expression:
+        case SyntaxType::Term:
+        case SyntaxType::Factor:
+        case SyntaxType::Declaration:
         default:
             break;
     }
@@ -108,12 +127,12 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
     string r0 = "eax";
     string r1 = "ecx";
     auto op = bonode.GetOperator();
-    if (op == OperatorType::AND || op == OperatorType::OR) {
+    if (op == OperatorType::Logical_AND || op == OperatorType::Logical_OR) {
         auto jump = CreateNewLabel();
         auto end = CreateNewLabel();
         Generate(bonode.Child(0), file);
         CompareWithZero(r0, file);
-        if (op == OperatorType::AND) {
+        if (op == OperatorType::Logical_AND) {
             JumpIfNotEqual(jump, file);
             JumpUnconditional(end, file);
         } else {
@@ -132,10 +151,17 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
         return;
     }
 
-    Generate(bonode.Child(0), file);
-    PushRegisterToStack(r0, file);
-    Generate(bonode.Child(1), file);
-    PopRegisterFromStack(r1, file);
+    if (requires_swap(bonode.GetOperator())) {
+        Generate(bonode.Child(1), file);
+        PushRegisterToStack(r0, file);
+        Generate(bonode.Child(0), file);
+        PopRegisterFromStack(r1, file);
+    } else {
+        Generate(bonode.Child(0), file);
+        PushRegisterToStack(r0, file);
+        Generate(bonode.Child(1), file);
+        PopRegisterFromStack(r1, file);
+    }
 
     switch (bonode.GetOperator()) {
         case OperatorType::Addition:
@@ -146,6 +172,9 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
             break;
         case OperatorType::Division:
             DivideRegisters(r0, r1, file);
+            break;
+        case OperatorType::Modulo:
+            ModuloRegisters(r0, r1, file);
             break;
         case OperatorType::Multiplication:
             MultiplyRegisters(r0, r1, file);
@@ -168,7 +197,23 @@ void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std:
         case OperatorType::Greater_Than_Or_Equal:
             CompareGreaterThanOrEqual(r0, r1, file);
             break;
+        case OperatorType::Bitwise_AND:
+            BitwiseAndRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_XOR:
+            BitwiseXorRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_OR:
+            BitwiseOrRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_LShift:
+            BitwiseLShiftRegisters(r0, r1, file);
+            break;
+        case OperatorType::Bitwise_RShift:
+            BitwiseRShiftRegisters(r0, r1, file);
+            break;
         default:
+        case OperatorType::None:
             break;
     }
 }
@@ -179,18 +224,31 @@ void CodeGenerator::LogicalNegateRegister(const string &reg, std::ostream &file)
     SetIfEqual(reg, file);
 }
 
-void CodeGenerator::SwapRegisters(const string &reg1, const string &reg2, std::ostream &file) {
-    CopyFromRegister(reg1, "edx", file);
-    CopyFromRegister(reg2, reg1, file);
-    CopyFromRegister("edx", reg2, file);
-}
-
 void CodeGenerator::CompareEqual(const string &reg1, const string &reg2, std::ostream &file) {
     CompareRegisters(reg1, reg2, file);
     ZeroOutRegister(reg1, file);
     SetIfEqual(reg1, file);
 }
 
+void CodeGenerator::BitwiseAndRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tand\t\t%" << reg2 << ", %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseOrRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tor\t\t%" << reg2 << ", %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseXorRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\txor\t\t%" << reg2 << ", %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseLShiftRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tshl\t\t%" << reg2[1] << "l, %" << reg1 << "\n";
+}
+
+void CodeGenerator::BitwiseRShiftRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    file << "\tshr\t\t%" << reg2[1] << "l, %" << reg1 << "\n";
+}
 
 void CodeGenerator::CompareNotEqual(const string &reg1, const string &reg2, std::ostream &file) {
     CompareRegisters(reg1, reg2, file);
@@ -207,20 +265,33 @@ void CodeGenerator::CompareWithZero(const string &reg, std::ostream &file) {
 }
 
 void CodeGenerator::HandleConstant(ConstantNode &cnode, std::ostream &file) {
-    SetRegisterVal("eax", cnode.Value(), file);
+    //generated constants with no context are null statements, so don't generate their values
+    switch (cnode.Parent().Type()) {
+        case SyntaxType::Body:
+        case SyntaxType::For_Loop:
+        case SyntaxType::While_Loop:
+        case SyntaxType::Do_While_Loop:
+            break;
+        default:
+            SetRegisterVal("eax", cnode.Value(), file);
+            break;
+    }
 }
 
 void CodeGenerator::SubtractRegisters(const string &reg1, const string &reg2, std::ostream &file) {
-    SwapRegisters(reg1, reg2, file);
     file << "\tsubl\t%" << reg2 << ", %"<< reg1 << "\n";
 }
 
 void CodeGenerator::DivideRegisters(const string &reg1, const string &reg2, std::ostream &file) {
-    SwapRegisters(reg1, reg2, file);
     file << "\tcdq\n";
     file << "\tidivl\t%" << reg2 << "\n";
 }
 
+
+void CodeGenerator::ModuloRegisters(const string &reg1, const string &reg2, std::ostream &file) {
+    DivideRegisters(reg1, reg2, file);
+    Movl("%edx, %" + reg1, file);
+}
 
 void CodeGenerator::WriteFunctionName(const FunctionNode & fnode, std::ostream & file) {
     file << ".globl " << fnode.Name() << "\n";
@@ -455,12 +526,13 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     }
 
     //replace the context because we saved it
+    if (_symbolMap->ContainsReturn()) context->ContainsReturn(true);
     delete _symbolMap;
     _symbolMap = context;
-    if (bnode.Parent().Type() != SyntaxType::Function && curScope.size()) AddToRegister(curScope.size() * 4, "esp", file);
+    if ((int)curScope.size() && bnode.Parent().Type() != SyntaxType::Function) AddToRegister((int)curScope.size() * 4, "esp", file);
 }
 
-void CodeGenerator::AddToRegister(int value, const std::string reg, std::ostream &file) {
+void CodeGenerator::AddToRegister(int value, const std::string & reg, std::ostream &file) {
     file << "\taddl\t$" << value << ", %" << reg << "\n";
 }
 
@@ -468,3 +540,130 @@ CodeGenerator::~CodeGenerator() {
     delete _symbolMap;
 }
 
+void CodeGenerator::HandleContinue(const ContinueNode &cnode, std::ostream &file) {
+    if (!_beginLoop.empty() && _endLoopBody.empty()) {
+        JumpUnconditional(_beginLoop, file);
+    } else if (!_endLoopBody.empty()) {
+        JumpUnconditional(_endLoopBody, file);
+    } else {
+        throw CodeGenerationException("Break statement used outside of loop");
+    }
+}
+
+void CodeGenerator::HandleBreak(const BreakNode &bnode, std::ostream &file) {
+    if (!_endLoop.empty()) {
+        JumpUnconditional(_endLoop, file);
+    } else {
+        throw CodeGenerationException("Continue statement used outside of loop");
+    }
+}
+
+void CodeGenerator::HandleWhileLoop(const WhileLoopNode &wnode, std::ostream &file) {
+    auto first = _beginLoop;
+    auto second = _endLoop;
+
+    //allocate labels for loop
+    _beginLoop = CreateNewLabel();
+    _endLoop = CreateNewLabel();
+
+    MarkLabel(_beginLoop, file);
+
+    Generate(wnode.Child(0), file);
+    CompareWithZero("eax", file);
+    JumpIfEqual(_endLoop, file);
+
+    Generate(wnode.Child(1), file);
+
+    JumpUnconditional(_beginLoop, file);
+
+    MarkLabel(_endLoop, file);
+
+    //reset labels at end of loop
+    _beginLoop = first.empty() ? "": first;
+    _endLoop = second.empty() ? "": second;
+}
+
+void CodeGenerator::HandleDoWhileLoop(const DoWhileLoopNode &dwnode, std::ostream &file) {
+    auto first = _beginLoop;
+    auto second = _endLoop;
+
+    //allocate labels for loop
+    _beginLoop = CreateNewLabel();
+    _endLoop = CreateNewLabel();
+
+    MarkLabel(_beginLoop, file);
+
+    Generate(dwnode.Child(0), file);
+
+    Generate(dwnode.Child(1), file);
+    CompareWithZero("eax", file);
+    JumpIfEqual(_endLoop, file);
+
+    JumpUnconditional(_beginLoop, file);
+
+    MarkLabel(_endLoop, file);
+
+    //reset labels at end of loop
+    _beginLoop = first.empty() ? "": first;
+    _endLoop = second.empty() ? "": second;
+}
+
+void CodeGenerator::HandleForLoop(const ForLoopNode &fnode, std::ostream &file) {
+    //allocate labels for loop
+    auto first = _beginLoop;
+    auto second = _endLoop;
+    auto third = _endLoopBody;
+
+    _beginLoop = CreateNewLabel();
+    _endLoop = CreateNewLabel();
+    _endLoopBody = CreateNewLabel();
+
+    std::unordered_set<std::string> curScope;
+    SymbolMap * context = new SymbolMap(*_symbolMap);
+
+    if (fnode.Child(0)->Type() == SyntaxType::Declaration) {
+        HandleDeclaration(*(DeclarationNode *)fnode.Child(0), curScope, file);
+    } else {
+        Generate(fnode.Child(0), file);
+    }
+
+    MarkLabel(_beginLoop, file);
+
+    if (fnode.Child(1)->Type() == SyntaxType::Constant) {
+        //this is to override the no output default from empty statement
+        //so that for loops run forever if specified
+        SetRegisterVal("eax", 1, file);
+    } else {
+        Generate(fnode.Child(1), file);
+    }
+
+    CompareWithZero("eax", file);
+    JumpIfEqual(_endLoop, file);
+
+    Generate(fnode.Child(3), file);
+
+    //label the post-expression:
+    MarkLabel(_endLoopBody, file);
+    Generate(fnode.Child(2), file);
+
+    JumpUnconditional(_beginLoop, file);
+
+    MarkLabel(_endLoop, file);
+
+    if ((int)curScope.size()) AddToRegister((int)curScope.size() * 4, "esp", file);
+
+    //reset labels at end of loop
+    _beginLoop = first.empty() ? "": first;
+    _endLoop = second.empty() ? "": second;
+    _endLoopBody = third.empty() ? "": third;
+
+    delete _symbolMap;
+    _symbolMap = context;
+
+}
+
+bool CodeGenerator::requires_swap(OperatorType otype) {
+    return otype == OperatorType::Minus ||
+    otype == OperatorType::Division || otype == OperatorType::Modulo ||
+    otype == OperatorType::Bitwise_RShift || otype == OperatorType::Bitwise_LShift;
+}
