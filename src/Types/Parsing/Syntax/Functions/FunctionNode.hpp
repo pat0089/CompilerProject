@@ -8,7 +8,7 @@ class FunctionNode : public SyntaxNode {
 public:
 
     FunctionNode();
-    ~FunctionNode();
+    ~FunctionNode() override;
     explicit FunctionNode(std::string toInit);
     std::string & Name() const;
     std::string PrettyPrint() override;

@@ -1,5 +1,6 @@
 #include "Parser.hpp"
 #include "../Types/Lexing/Tokens.hpp"
+#include "../Types/Parsing/Syntax/Expressions/FunctionCallNode.hpp"
 #include <sstream>
 using std::cerr;
 using std::endl;
@@ -16,7 +17,14 @@ void Parser::Parse(const TokenList & tokens) {
 }
 
 ProgramNode * Parser::ParseProgram() {
-    return new ProgramNode(ParseMainFunction());
+
+    auto temp = new ProgramNode();
+
+    while (IsNextToken(KeywordType::Int)) {
+        temp->Add(ParseFunction());
+    }
+
+    return temp;
 }
 
 FunctionNode * Parser::ParseMainFunction() {
@@ -36,17 +44,21 @@ FunctionNode * Parser::ParseMainFunction() {
 
 FunctionNode * Parser::ParseFunction() {
 
+    //can only currently have int return types
     TryParse(KeywordType::Int);
 
     Identifier * name = nullptr;
-
     if (!IsNextToken(TokenType::Identifier)) {
         Fail(TokenType::Identifier);
     } else {
         name = (Identifier *)Front();
     }
 
+    auto funcName = name->GetRaw();
+
     _symbolMap.AddFunction(name->GetRaw(), true);
+    //move check for main function to elsewhere
+    // if (funcName == "main") _symbolMap.
     auto newFunction = new FunctionNode(name->GetRaw());
 
     //DONT FORGET TO DELETE THE TOKENS YOU Front() OFF THE QUEUE:
@@ -57,25 +69,19 @@ FunctionNode * Parser::ParseFunction() {
     //parse args
     newFunction->Add(params);
 
-    auto body = ParseBody();
+    if (!IsNextToken(SymbolType::Semicolon)) {
+        auto body = ParseBody();
 
-    //parse body
-    newFunction->Add(body);
-
+        //parse body
+        newFunction->Add(body);
+    } else {
+        TryParse(SymbolType::Semicolon);
+    }
     return newFunction;
 }
 
-Parameters * Parser::ParseParameters() {
-    TryParse(SymbolType::Open_Parenthesis);
-    auto newArgs = new Parameters();
-    while (!IsNextToken(SymbolType::Close_Parenthesis)) {
-        newArgs->Add(ParseParameter());
-    }
-    TryParse(SymbolType::Close_Parenthesis);
-    return newArgs;
-}
-
 BodyNode * Parser::ParseBody() {
+
     TryParse(SymbolType::Open_Brace);
 
     auto newBody = new BodyNode();
@@ -90,9 +96,32 @@ BodyNode * Parser::ParseBody() {
     return newBody;
 }
 
+Parameters * Parser::ParseParameters() {
+    TryParse(SymbolType::Open_Parenthesis);
+    auto newArgs = new Parameters();
+    while (!IsNextToken(SymbolType::Close_Parenthesis)) {
+        newArgs->Add(ParseParameter());
+        if (IsNextToken(SymbolType::Comma)) PopFront();
+    }
+    TryParse(SymbolType::Close_Parenthesis);
+    return newArgs;
+}
+
 ParameterNode * Parser::ParseParameter() {
-    //add code to parse the arguments of functions
-    //Fail();
+
+    //can only currently have int type parameters
+    TryParse(KeywordType::Int);
+
+    Identifier * name = nullptr;
+
+    if (!IsNextToken(TokenType::Identifier)) {
+        Fail(TokenType::Identifier);
+    } else {
+        name = (Identifier *)Front();
+    }
+
+    delete name;
+
     return new ParameterNode();
 }
 
@@ -204,11 +233,15 @@ ExpressionNode * Parser::ParseExpression() {
         auto var_name = Front();
         if (IsNextToken(SymbolType::Equals)) {
             //parse assignment
-            PopFront();
-
-            auto temp = new AssignmentNode(var_name->GetRaw(), ParseExpression());
-            delete var_name;
-            return (ExpressionNode *)temp;
+            auto tempToken = Front();
+            if (!IsNextToken(SymbolType::Equals)) {
+                auto temp = new AssignmentNode(var_name->GetRaw(), ParseExpression());
+                delete var_name;
+                return (ExpressionNode *) temp;
+            } else {
+                PutbackFront(tempToken);
+                PutbackFront(var_name);
+            }
         } else {
             PutbackFront(var_name);
         }
@@ -404,30 +437,35 @@ TermNode *Parser::ParseTerm() {
 }
 
 FactorNode *Parser::ParseFactor() {
-    if (IsNextToken(SymbolType::Open_Parenthesis)) {
-        PopFront();
-        auto exp = (FactorNode *)ParseExpression();
-        TryParse(SymbolType::Close_Parenthesis);
-        return exp;
-    } else if (IsUnaryOperation(PeekFront())) {
-        auto next = Front();
-        SymbolType stype = GetSymbolType(next);
-        FactorNode * factor = ParseFactor();
-        auto temp = new UnaryOperatorNode(stype, (ExpressionNode *)factor);
-        delete next;
-        return (FactorNode *)temp;
-    } else if (IsNextToken(TokenType::Literal)) {
-        auto tempToken = (Literal*)Front();
-        auto temp = new ConstantNode(tempToken);
-        delete tempToken;
-        return (FactorNode *)temp;
-    } else if (IsNextToken(TokenType::Identifier)) {
-        auto tempToken = Front();
-        auto temp = new VariableNode(tempToken->GetRaw());
-        delete tempToken;
-        return (FactorNode *)temp;
+    auto function_call = ParseFunctionCall();
+    if (!function_call) {
+        if (IsNextToken(SymbolType::Open_Parenthesis)) {
+            PopFront();
+            auto exp = (FactorNode *)ParseExpression();
+            TryParse(SymbolType::Close_Parenthesis);
+            return exp;
+        } else if (IsUnaryOperation(PeekFront())) {
+            auto next = Front();
+            SymbolType stype = GetSymbolType(next);
+            FactorNode * factor = ParseFactor();
+            auto temp = new UnaryOperatorNode(stype, (ExpressionNode *)factor);
+            delete next;
+            return (FactorNode *)temp;
+        } else if (IsNextToken(TokenType::Literal)) {
+            auto tempToken = (Literal*)Front();
+            auto temp = new ConstantNode(tempToken);
+            delete tempToken;
+            return (FactorNode *)temp;
+        } else if (IsNextToken(TokenType::Identifier)) {
+            auto tempToken = Front();
+            auto temp = new VariableNode(tempToken->GetRaw());
+            delete tempToken;
+            return (FactorNode *)temp;
+        } else {
+            return nullptr;
+        }
     } else {
-        return nullptr;
+        return (FactorNode *)function_call;
     }
 }
 
@@ -453,14 +491,17 @@ bool Parser::IsTokenType(KeywordType ktype, Token * t) const {
 }
 
 bool Parser::IsNextToken(TokenType type) const {
+    if (_curList->Empty()) return false;
     return _curList->PeekType() == type;
 }
 
 bool Parser::IsNextToken(SymbolType stype) const {
+    if (_curList->Empty()) return false;
     return IsTokenType(stype, _curList->PeekFront());
 }
 
 bool Parser::IsNextToken(KeywordType ktype) const {
+    if (_curList->Empty()) return false;
     return IsTokenType(ktype, _curList->PeekFront());
 }
 
@@ -628,4 +669,32 @@ void Parser::TryParse(KeywordType ktype) {
 
 Parser::~Parser() {
     delete _curList;
+}
+
+ExpressionNode *Parser::ParseFunctionCall() {
+    if (IsNextToken(TokenType::Identifier)) {
+        auto funcNameNode = Front();
+        auto temp = new FunctionCallNode(funcNameNode->GetRaw());
+        if (IsNextToken(SymbolType::Open_Parenthesis)) {
+            PopFront();
+
+            if (!IsNextToken(SymbolType::Close_Parenthesis)) {
+                auto exp = ParseExpression();
+                temp->Add(exp);
+                while (IsNextToken(SymbolType::Comma)) {
+                    PopFront();
+                    exp = ParseExpression();
+                    temp->Add(exp);
+                }
+            }
+        } else {
+            PutbackFront(funcNameNode);
+            delete temp;
+            return nullptr;
+        }
+        TryParse(SymbolType::Close_Parenthesis);
+        delete funcNameNode;
+        return temp;
+    }
+    return nullptr;
 }

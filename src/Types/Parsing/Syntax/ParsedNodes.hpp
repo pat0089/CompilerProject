@@ -25,4 +25,5 @@
 #include "Expressions/BinaryOperatorNode.hpp"
 #include "Expressions/VariableNode.hpp"
 #include "Expressions/ConditionalExpressionNode.hpp"
+#include "Expressions/FunctionCallNode.hpp"
 #endif //COMPILERPROJECT_PARSEDNODES_HPP

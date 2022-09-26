@@ -98,6 +98,8 @@ private:
     bool IsUnaryOperation(Token * t);
 
     bool _verified = true;
+
+    ExpressionNode *ParseFunctionCall();
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP

@@ -85,6 +85,12 @@ void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
         case SyntaxType::Continue:
             os << *(ContinueNode *)snode << "\n";
             break;
+        case SyntaxType::Function_Call:
+            os << *(FunctionCallNode *)snode << "\n";
+            break;
+        case SyntaxType::Parameter:
+            os << *(ParameterNode *)snode << "\n";
+            break;
         case SyntaxType::Statement:
         case SyntaxType::Expression:
         case SyntaxType::Term:

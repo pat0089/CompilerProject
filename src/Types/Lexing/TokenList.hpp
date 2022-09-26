@@ -50,6 +50,8 @@ public:
 
     Token & operator[] (int i);
 
+    bool Empty();
+
 private:
 
     std::deque<Token *> *_tokens;
