@@ -35,7 +35,6 @@ private:
 
     //register operations
     void HandleConstant(ConstantNode &cnode, std::ostream &file);
-    void SwapRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
 
     //unary operators
     void NegateRegister(const std::string & reg, std::ostream & file);
@@ -47,6 +46,7 @@ private:
     void SubtractRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
     void DivideRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
     void MultiplyRegisters(const std::string & reg1, const std::string & reg2, std::ostream & file);
+    void ModuloRegisters(const string &reg1, const string &reg2, std::ostream &file);
 
     void CompareEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
     void CompareNotEqual(const std::string & reg1, const std::string & reg2, std::ostream & file);
@@ -111,24 +111,25 @@ private:
     void HandleConditionalExpression(const ConditionalExpressionNode & cenode, std::ostream &file);
 
     void HandleFunction(const FunctionNode & fnode, std::ostream &file);
-
     void HandleBody(const BodyNode & bnode, std::ostream &file);
-
     void HandleReturn(const ReturnNode & rnode, std::ostream &file);
 
     void HandleContinue(const ContinueNode &cnode, std::ostream &file);
-
     void HandleBreak(const BreakNode &bnode, std::ostream &file);
 
     void HandleWhileLoop(const WhileLoopNode &wnode, std::ostream &file);
-
     void HandleDoWhileLoop(const DoWhileLoopNode &dwnode, std::ostream &file);
-
     void HandleForLoop(const ForLoopNode &fnode, std::ostream &file);
 
-    void ModuloRegisters(const string &reg1, const string &reg2, std::ostream &file);
-
     bool requires_swap(OperatorType otype);
+
+    void HandleFunctionCall(const FunctionCallNode &fcnode, std::ostream &file);
+
+    void CallFunction(const string &fname, std::ostream &file);
+
+    void HandleParameters(const Parameters &pnode, std::ostream &file);
+
+    void HandleParameter(const ParameterNode &pnode, int index);
 };
 
 

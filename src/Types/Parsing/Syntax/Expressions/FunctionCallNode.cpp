@@ -1,18 +1,18 @@
 #include "FunctionCallNode.hpp"
 
-FunctionCallNode::FunctionCallNode(const std::string &toInit) : ExpressionNode(SyntaxType::Function_Call), _name(new std::string(toInit)) {}
+FunctionCallNode::FunctionCallNode(const std::string &toInit) : ExpressionNode(SyntaxType::Function_Call), IFunction(toInit) {}
 
 std::string FunctionCallNode::PrettyPrint() {
-    return "Function call: " + *_name;
+    return "Function call: " + Name();
 }
 
-FunctionCallNode::~FunctionCallNode() {
-    delete _name;
+FunctionCallNode::FunctionCallNode() : ExpressionNode(SyntaxType::Function_Call), IFunction() {}
+
+BodyNode *FunctionCallNode::BodyPtr() const {
+    return nullptr;
 }
 
-std::string &FunctionCallNode::Name() const {
-    return *_name;
+Parameters *FunctionCallNode::ParamsPtr() const {
+    return (Parameters *)_children[0];
 }
-
-FunctionCallNode::FunctionCallNode() : ExpressionNode(SyntaxType::Function_Call), _name(new std::string()) {}
 

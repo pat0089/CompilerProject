@@ -2,17 +2,16 @@
 #define COMPILERPROJECT_FUNCTIONCALLNODE_HPP
 #include "../Functions/FunctionNode.hpp"
 #include "ExpressionNode.hpp"
+#include "IFunction.hpp"
 
-class FunctionCallNode : public ExpressionNode {
+class FunctionCallNode : public ExpressionNode, public IFunction {
 public:
     FunctionCallNode();
-    ~FunctionCallNode() override;
-    std::string & Name() const;
     explicit FunctionCallNode(const std::string &toInit);
     std::string PrettyPrint() override;
-
-private:
-    std::string * _name;
+protected:
+    BodyNode * BodyPtr() const override;
+    Parameters * ParamsPtr() const override;
 };
 
 

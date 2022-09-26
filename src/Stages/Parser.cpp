@@ -56,9 +56,8 @@ FunctionNode * Parser::ParseFunction() {
 
     auto funcName = name->GetRaw();
 
-    _symbolMap.AddFunction(name->GetRaw(), true);
-    //move check for main function to elsewhere
-    // if (funcName == "main") _symbolMap.
+    //TODO: move check for main function to elsewhere
+    if (funcName == "main") _symbolMap.containsMain = true;
     auto newFunction = new FunctionNode(name->GetRaw());
 
     //DONT FORGET TO DELETE THE TOKENS YOU Front() OFF THE QUEUE:
@@ -119,10 +118,10 @@ ParameterNode * Parser::ParseParameter() {
     } else {
         name = (Identifier *)Front();
     }
-
+    auto pname = name->GetRaw();
     delete name;
 
-    return new ParameterNode();
+    return new ParameterNode(pname);
 }
 
 StatementNode *Parser::ParseDeclaration() {
@@ -534,7 +533,7 @@ void Parser::Fail(bool hasMain, TokenType ttype, SymbolType stype, KeywordType k
     std::stringstream err;
     if (_verified) _verified = false;
     if (!hasMain) {
-        cerr << "FAIL0!: No \'main\' function found\n";
+        err << "FAIL0!: No \'main\' function found\n";
     } else {
         err << "FAIL1!: Unexpected Token, Expected: ";
         switch (ttype) {
@@ -618,8 +617,8 @@ void Parser::Fail(bool hasMain, TokenType ttype, SymbolType stype, KeywordType k
                 break;
         }
         err << endl;
-        throw ParsingException(err.str());
     }
+    throw ParsingException(err.str());
 }
 
 void Parser::Fail(TokenType type)  {
@@ -635,7 +634,7 @@ void Parser::Fail(KeywordType ktype) {
 }
 
 bool Parser::Verify() {
-    if (!_symbolMap.FindFunction("main")) Fail(false);
+    if (!_symbolMap.containsMain) Fail(false);
     return _verified;
 }
 
@@ -677,16 +676,17 @@ ExpressionNode *Parser::ParseFunctionCall() {
         auto temp = new FunctionCallNode(funcNameNode->GetRaw());
         if (IsNextToken(SymbolType::Open_Parenthesis)) {
             PopFront();
-
+            auto params = new Parameters();
             if (!IsNextToken(SymbolType::Close_Parenthesis)) {
                 auto exp = ParseExpression();
-                temp->Add(exp);
+                params->Add(exp);
                 while (IsNextToken(SymbolType::Comma)) {
                     PopFront();
                     exp = ParseExpression();
-                    temp->Add(exp);
+                    params->Add(exp);
                 }
             }
+            temp->Add(params);
         } else {
             PutbackFront(funcNameNode);
             delete temp;

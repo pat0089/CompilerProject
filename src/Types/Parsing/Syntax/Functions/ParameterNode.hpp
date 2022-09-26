@@ -1,16 +1,13 @@
 #ifndef COMPILERPROJECT_PARAMETERNODE_HPP
 #define COMPILERPROJECT_PARAMETERNODE_HPP
 #include "../../SyntaxNode.hpp"
+#include "../Expressions/IVariable.hpp"
 
-class ParameterNode : public SyntaxNode {
-
+class ParameterNode : public SyntaxNode, public IVariable {
 public:
-    ParameterNode();
-
+    explicit ParameterNode(const std::string & pname);
 private:
-
     std::string PrettyPrint() override;
-
 };
 
 

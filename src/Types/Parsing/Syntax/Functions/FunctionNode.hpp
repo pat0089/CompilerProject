@@ -3,20 +3,17 @@
 #include "../../SyntaxNode.hpp"
 #include "Parameters.hpp"
 #include "../Statements/BodyNode.hpp"
+#include "../Expressions/IFunction.hpp"
 
-class FunctionNode : public SyntaxNode {
+class FunctionNode : public SyntaxNode, public IFunction {
 public:
 
     FunctionNode();
-    ~FunctionNode() override;
-    explicit FunctionNode(std::string toInit);
-    std::string & Name() const;
+    explicit FunctionNode(const std::string &toInit);
     std::string PrettyPrint() override;
-    Parameters & Params() const;
-    BodyNode & Body() const;
-
-private:
-    std::string * _name;
+protected:
+    BodyNode * BodyPtr() const override;
+    Parameters * ParamsPtr() const override;
 };
 
 
