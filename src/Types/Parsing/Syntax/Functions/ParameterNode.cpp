@@ -1,8 +1,8 @@
 #include "ParameterNode.hpp"
 using std::string;
 
-ParameterNode::ParameterNode() : SyntaxNode(SyntaxType::Parameter) {}
-
 string ParameterNode::PrettyPrint() {
-    return "Parameter";
+    return "Parameter: " + GetVariableName();
 }
+
+ParameterNode::ParameterNode(const string &pname) : SyntaxNode(SyntaxType::Parameter), IVariable(pname) {}

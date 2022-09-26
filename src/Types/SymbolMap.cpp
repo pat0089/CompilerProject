@@ -68,3 +68,40 @@ bool SymbolMap::FindFunction(const std::string &name) {
     if (!_functionMap) return false;
     return _functionMap->find(name) != _functionMap->end();
 }
+
+void SymbolMap::NumParams(int val) {
+    if (_functionMap) _functionMap->at(CurrentFunction).numParams = val;
+}
+
+int SymbolMap::NumParams() {
+    if (_functionMap) return _functionMap->at(CurrentFunction).numParams;
+    return -1;
+}
+
+bool SymbolMap::BeenDefined() {
+    if (_functionMap) return _functionMap->at(CurrentFunction).beenDefined;
+    return false;
+}
+
+void SymbolMap::BeenDefined(bool val) {
+    if (_functionMap) _functionMap->at(CurrentFunction).beenDefined = val;
+}
+
+void SymbolMap::AddParameter(const std::string &pname, int stackIndex) {
+    if (_functionMap) {
+        if (FindVariable(pname) == -1) {
+            _functionMap->at(CurrentFunction).variables.insert(std::make_pair(pname, stackIndex));
+        }
+    }
+}
+
+std::vector<std::string> SymbolMap::FunctionVariableNames() {
+    if (_functionMap) {
+        auto toReturn = std::vector<std::string>();
+        for (auto kvp : _functionMap->at(CurrentFunction).variables) {
+            toReturn.push_back(kvp.first);
+        }
+        return toReturn;
+    }
+    return {};
+}

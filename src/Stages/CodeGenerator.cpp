@@ -20,12 +20,14 @@ void CodeGenerator::Generate(const AST &ast, const string & fname) {
 void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
     switch (snode->Type()) {
         case SyntaxType::Program:
-            Generate(snode->Child(0), file);
+            for (int i = 0; i < snode->ChildCount(); i++)
+                    Generate(snode->Child(i), file);
             break;
         case SyntaxType::Function:
             HandleFunction(*(FunctionNode * )(snode), file);
             break;
-        case SyntaxType::Parameters:
+        case SyntaxType::Function_Call:
+            HandleFunctionCall(*(FunctionCallNode *)(snode), file);
             break;
         case SyntaxType::Body:
             HandleBody(*(BodyNode * )(snode), file);
@@ -71,6 +73,9 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
         case SyntaxType::Continue:
             HandleContinue(*(ContinueNode *)(snode), file);
             break;
+        case SyntaxType::Parameters:
+            HandleParameters(*(Parameters *)(snode), file);
+            break;
         case SyntaxType::None:
         case SyntaxType::Expression:
         case SyntaxType::Term:
@@ -82,18 +87,125 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
 }
 
 void CodeGenerator::HandleFunction(const FunctionNode & fnode, std::ostream &file) {
-    WriteFunctionName(fnode, file);
-    WriteFunctionPrologue(file);
-    for (int i = 0; i < fnode.ChildCount(); i++) {
-        Generate(fnode.Child(i), file);
+    //we need to handle functions with a little more finesse:
+    // if we don't have the function we've encountered yet in the map,
+    //  add it unconditionally (?)
+    // else if this one contains a different number of parameters
+    //  fail with useful error message
+    // else if this one has already been declared and defined
+    //  fail with useful error message
+    // if we haven't defined this one's body yet, and it contains one
+    //  then process that in this function
+
+    //if we haven't added this function to the map, add it
+    // otherwise set the current function to the named function
+    if (!_symbolMap->FindFunction(fnode.Name())) {
+        _symbolMap->AddFunction(fnode.Name(), true);
+    } else {
+        SymbolMap::CurrentFunction = fnode.Name();
     }
-    //if function contains no return statement, return 0
-    if (!_symbolMap->ContainsReturn())
-    {
-        ZeroOutRegister("eax", file);
-        WriteFunctionEpilogue(file);
-        WriteReturn(file);
+
+    HandleParameters(fnode.Params(), file);
+
+    if (fnode.ContainsBody()) {
+
+        if (_symbolMap->BeenDefined()) throw CodeGenerationException("Function has already been defined: " + fnode.Name());
+
+        //define the function
+        _symbolMap->BeenDefined(true);
+        WriteFunctionName(fnode, file);
+        WriteFunctionPrologue(file);
+
+        //generate assembly for the body of the function
+        HandleBody(fnode.Body(), file);
+        //if function contains no return statement, return 0
+        if (!_symbolMap->ContainsReturn())
+        {
+            ZeroOutRegister("eax", file);
+            WriteFunctionEpilogue(file);
+            WriteReturn(file);
+        }
     }
+
+}
+
+
+void CodeGenerator::HandleFunctionCall(const FunctionCallNode &fcnode, std::ostream &file) {
+    if (!fcnode.ContainsBody()) {
+        //generate in reverse order and push to stack
+        HandleParameters(fcnode.Params(), file);
+
+        //call named function
+        CallFunction(fcnode.Name(), file);
+
+        //deallocate function parameters on the stack
+        AddToRegister(4 * fcnode.Params().ChildCount(), "esp", file);
+    }
+}
+
+void CodeGenerator::CallFunction(const string &fname, std::ostream &file) {
+    file << "\tcall\t" << fname << "\n";
+}
+
+void CodeGenerator::HandleParameters(const Parameters &pnode, std::ostream &file) {
+    if (pnode.Parent().Type() == SyntaxType::Function) {
+        //if we are in a function definition or forward declaration,
+        // we are guaranteed to be encountering ParameterNodes and
+        // will just add to the symbol map their name and their parameter offset
+        // starting at (ebp + )8
+
+        /*\/\/\/\/\/\/\/:::PSEUDOCODE:::\/\/\/\/\/\/\/
+         * param_offset = 8 // first parameter is at EBP + 8
+         * for each function parameter:
+         *     var_map.put(parameter, param offset)
+         *     current_scope.add(parameter)
+         *     param_offset += 4
+         * */
+        bool isDefinition = pnode.Parent().ContainsChildType(SyntaxType::Body);
+
+        if (_symbolMap->NumParams() == -1 || _symbolMap->NumParams() == pnode.ChildCount()) {
+            if (isDefinition) {
+                int dec = -2;
+                for (int i = 0; i < pnode.ChildCount(); i++) {
+                    HandleParameter(*(ParameterNode*)(pnode.Child(i)), dec);
+                    dec--;
+                }
+            }
+            _symbolMap->NumParams(pnode.ChildCount());
+        } else {
+            if (!isDefinition) {
+                throw CodeGenerationException("Function redeclaration: " + dynamic_cast<FunctionNode &>(pnode.Parent()).Name());
+            } else {
+                throw CodeGenerationException("Function definition with mismatched number of parameters: " + dynamic_cast<FunctionNode &>(pnode.Parent()).Name());
+            }
+        }
+    } else {
+        auto context = SymbolMap::CurrentFunction;
+        //TODO: Find a better solution than dynamic casting upon each function call
+        SymbolMap::CurrentFunction = dynamic_cast<FunctionCallNode &>(pnode.Parent()).Name();
+
+        //check for bad calls
+        if (pnode.ChildCount() != _symbolMap->NumParams()) {
+            if (pnode.ChildCount() > _symbolMap->NumParams()) {
+                throw CodeGenerationException("Function call with too many parameters: " + dynamic_cast<FunctionCallNode &>(pnode.Parent()).Name());
+            } else {
+                throw CodeGenerationException("Function call with too few parameters: " + dynamic_cast<FunctionCallNode &>(pnode.Parent()).Name());
+            }
+        }
+
+        SymbolMap::CurrentFunction = context;
+
+        //otherwise we are in a function call, so treat the children
+        // as expressions and push them to the stack in reverse order
+        for (int i = pnode.ChildCount() - 1; i >= 0; i--) {
+            Generate(pnode.Child(i), file);
+            PushRegisterToStack("eax", file);
+        }
+    }
+}
+
+void CodeGenerator::HandleParameter(const ParameterNode &pnode, int index) {
+    _symbolMap->AddParameter(pnode.GetVariableName(), index);
 }
 
 void CodeGenerator::HandleReturn(const ReturnNode & rnode, std::ostream &file) {
@@ -505,9 +617,17 @@ void CodeGenerator::HandleConditionalExpression(const ConditionalExpressionNode 
 }
 
 void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
+
     SymbolMap * context = new SymbolMap(*_symbolMap);
 
     auto curScope = std::unordered_set<std::string>();
+
+    if (bnode.Parent().Type() == SyntaxType::Function) {
+        auto names = context->FunctionVariableNames();
+        for (const auto& name : names) {
+            curScope.insert(name);
+        }
+    }
     //go through the list of statements and declarations and handle them differently:
     //-pass Body the current symbol map if we encounter another compound statement for
     // other further declarations, assignments, and references
@@ -527,9 +647,11 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
 
     //replace the context because we saved it
     if (_symbolMap->ContainsReturn()) context->ContainsReturn(true);
+    if (_symbolMap->BeenDefined()) context->BeenDefined(true);
+    if (_symbolMap->NumParams()) context->ContainsReturn(_symbolMap->NumParams());
     delete _symbolMap;
     _symbolMap = context;
-    if ((int)curScope.size() && bnode.Parent().Type() != SyntaxType::Function) AddToRegister((int)curScope.size() * 4, "esp", file);
+    if ((int)curScope.size() != 0 && bnode.Parent().Type() != SyntaxType::Function) AddToRegister((int)curScope.size() * 4, "esp", file);
 }
 
 void CodeGenerator::AddToRegister(int value, const std::string & reg, std::ostream &file) {

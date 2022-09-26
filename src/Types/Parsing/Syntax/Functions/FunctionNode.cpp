@@ -1,25 +1,19 @@
 #include "FunctionNode.hpp"
 using std::string;
 
-FunctionNode::FunctionNode() : SyntaxNode(SyntaxType::Function), _name(new string()) {}
-FunctionNode::~FunctionNode() { delete _name; }
+FunctionNode::FunctionNode() : SyntaxNode(SyntaxType::Function), IFunction() {}
 
-FunctionNode::FunctionNode(string toInit) : SyntaxNode(SyntaxType::Function) {
-    _name = new string(toInit);
-}
+FunctionNode::FunctionNode(const string &toInit) : SyntaxNode(SyntaxType::Function), IFunction(toInit) {}
 
 string FunctionNode::PrettyPrint() {
-    return string("Function: ") + *_name;
+    return "Function: " + Name();
 }
 
-Parameters &FunctionNode::Params() const {
-    return *(Parameters *)_children[0];
+BodyNode *FunctionNode::BodyPtr() const {
+    if (ChildCount() == 1) return nullptr;
+    return (BodyNode *)_children[1];
 }
 
-BodyNode &FunctionNode::Body() const {
-    return *(BodyNode *)_children[1];
-}
-
-string & FunctionNode::Name() const {
-    return *_name;
+Parameters *FunctionNode::ParamsPtr() const {
+    return (Parameters *)_children[0];
 }
