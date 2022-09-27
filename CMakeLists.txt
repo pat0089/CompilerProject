@@ -34,13 +34,13 @@ set(SOURCE_FILES
         src/Types/Parsing/Syntax/Expressions/BinaryOperatorNode.cpp
         src/Types/Parsing/Syntax/Expressions/IOperator.cpp
         src/Types/Parsing/Syntax/Statements/DeclarationNode.cpp
-        src/Types/Parsing/Syntax/Expressions/VariableNode.cpp
+        src/Types/Parsing/Syntax/Expressions/VariableReferenceNode.cpp
         src/Types/Parsing/Syntax/Expressions/IVariable.cpp
         src/Types/Parsing/Syntax/Statements/AssignmentNode.cpp
         src/Types/Parsing/Syntax/Statements/ConditionalStatementNode.cpp
         src/Types/Parsing/Syntax/Expressions/ConditionalExpressionNode.cpp
         src/Types/SymbolMap.cpp
-        src/Types/Parsing/Syntax/Statements/ForLoopNode.cpp src/Types/Parsing/Syntax/Statements/ForLoopNode.hpp src/Types/Parsing/Syntax/Statements/WhileLoopNode.cpp src/Types/Parsing/Syntax/Statements/WhileLoopNode.hpp src/Types/Parsing/Syntax/Statements/DoWhileLoopNode.cpp src/Types/Parsing/Syntax/Statements/DoWhileLoopNode.hpp src/Types/Parsing/Syntax/Statements/BreakNode.cpp src/Types/Parsing/Syntax/Statements/BreakNode.hpp src/Types/Parsing/Syntax/Statements/ContinueNode.cpp src/Types/Parsing/Syntax/Statements/ContinueNode.hpp src/Types/Parsing/Syntax/Expressions/FunctionCallNode.cpp src/Types/Parsing/Syntax/Expressions/FunctionCallNode.hpp src/Types/Parsing/Syntax/Expressions/IFunction.cpp src/Types/Parsing/Syntax/Expressions/IFunction.hpp)
+        src/Types/Parsing/Syntax/Statements/ForLoopNode.cpp src/Types/Parsing/Syntax/Statements/ForLoopNode.hpp src/Types/Parsing/Syntax/Statements/WhileLoopNode.cpp src/Types/Parsing/Syntax/Statements/WhileLoopNode.hpp src/Types/Parsing/Syntax/Statements/DoWhileLoopNode.cpp src/Types/Parsing/Syntax/Statements/DoWhileLoopNode.hpp src/Types/Parsing/Syntax/Statements/BreakNode.cpp src/Types/Parsing/Syntax/Statements/BreakNode.hpp src/Types/Parsing/Syntax/Statements/ContinueNode.cpp src/Types/Parsing/Syntax/Statements/ContinueNode.hpp src/Types/Parsing/Syntax/Expressions/FunctionCallNode.cpp src/Types/Parsing/Syntax/Expressions/FunctionCallNode.hpp src/Types/Parsing/Syntax/Expressions/IFunction.cpp src/Types/Parsing/Syntax/Expressions/IFunction.hpp src/Types/Parsing/Syntax/Functions/GlobalNode.cpp src/Types/Parsing/Syntax/Functions/GlobalNode.hpp)
 add_executable(CompilerProject ${SOURCE_FILES})
 
 set_target_properties(CompilerProject PROPERTIES

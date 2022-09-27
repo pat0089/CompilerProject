@@ -61,8 +61,8 @@ void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
         case SyntaxType::Assignment:
             os << *(AssignmentNode *)snode << "\n";
             break;
-        case SyntaxType::Variable:
-            os << *(VariableNode *)snode << "\n";
+        case SyntaxType::Variable_Reference:
+            os << *(VariableReferenceNode *)snode << "\n";
             break;
         case SyntaxType::Conditional_Statement:
             os << *(ConditionalStatementNode *)snode << "\n";
@@ -90,6 +90,9 @@ void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
             break;
         case SyntaxType::Parameter:
             os << *(ParameterNode *)snode << "\n";
+            break;
+        case SyntaxType::Global_Variable:
+            os << *(GlobalNode *)snode << "\n";
             break;
         case SyntaxType::Statement:
         case SyntaxType::Expression:

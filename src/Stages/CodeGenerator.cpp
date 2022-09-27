@@ -49,8 +49,8 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
         case SyntaxType::Assignment:
             HandleAssignment(*(AssignmentNode *)(snode), file);
             break;
-        case SyntaxType::Variable:
-            HandleVariable(*(VariableNode *)(snode), file);
+        case SyntaxType::Variable_Reference:
+            HandleVariable(*(VariableReferenceNode *)(snode), file);
             break;
         case SyntaxType::Conditional_Statement:
             HandleConditionalStatement(*(ConditionalStatementNode *)(snode), file);
@@ -541,7 +541,7 @@ void CodeGenerator::Map(const SymbolMap &smap) {
 
 void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::unordered_set<std::string> & current_context, std::ostream &file) {
     if (current_context.find(dnode.GetVariableName()) != current_context.end()) {
-        throw CodeGenerationException("Variable already declared in this scope: " + dnode.GetVariableName());
+        throw CodeGenerationException("Variable_Reference already declared in this scope: " + dnode.GetVariableName());
     } else {
         if (_symbolMap->FindVariable(dnode.GetVariableName()) == -1) {
             _symbolMap->AddVariable(dnode.GetVariableName());
@@ -557,16 +557,16 @@ void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::unorder
 void CodeGenerator::HandleAssignment(const AssignmentNode &anode, std::ostream &file) {
     int stack_var = _symbolMap->FindVariable(anode.GetVariableName());
     if (stack_var == -1) {
-        throw CodeGenerationException("Variable Assignment before Declaration: " + anode.GetVariableName());
+        throw CodeGenerationException("Variable_Reference Assignment before Declaration: " + anode.GetVariableName());
     }
     Generate(anode.Child(0), file);
     Movl("%eax, " + std::to_string(-4 * stack_var) + "(%ebp)", file);
 }
 
-void CodeGenerator::HandleVariable(const VariableNode &vnode, std::ostream &file) {
+void CodeGenerator::HandleVariable(const VariableReferenceNode &vnode, std::ostream &file) {
     int stack_var = _symbolMap->FindVariable(vnode.GetVariableName());
     if (stack_var == -1) {
-        throw CodeGenerationException("Variable used before declaration: " + vnode.GetVariableName());
+        throw CodeGenerationException("Variable_Reference used before declaration: " + vnode.GetVariableName());
     } else {
         Movl(std::to_string(-4 * stack_var) + "(%ebp), %eax", file);
     }
@@ -633,7 +633,7 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     // other further declarations, assignments, and references
     //-pass Declaration the current symbol map to be updated as well as the
     // current set of declarations for the current context
-    //-pass Assignment and Variable the symbol map for referencing to the stack locations
+    //-pass Assignment and Variable_Reference the symbol map for referencing to the stack locations
     //-otherwise fall back on the recursive Generate for other types of statements since
     // they don't need to use the symbol map or context set
     for (int i = 0; i < bnode.ChildCount(); i++) {

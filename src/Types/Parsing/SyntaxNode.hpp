@@ -8,12 +8,11 @@ enum class SyntaxType { None, Program,
         Statement, Return, Expression, Term,
         Factor, Constant,
         Unary_Operator, Binary_Operator,
-        Declaration, Assignment, Variable,
+        Declaration, Assignment, Variable_Reference,
         Conditional_Statement, Conditional_Expression,
         For_Loop, While_Loop, Do_While_Loop,
-        Break, Continue,
-
-        };
+        Break, Continue, Global_Variable,
+};
 
 class SyntaxNode {
 

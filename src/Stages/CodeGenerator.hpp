@@ -105,7 +105,7 @@ private:
 
     void HandleDeclaration(const DeclarationNode & dnode, std::unordered_set<std::string> & current_context, std::ostream &file);
     void HandleAssignment(const AssignmentNode & anode, std::ostream &file);
-    void HandleVariable(const VariableNode & vnode, std::ostream &file);
+    void HandleVariable(const VariableReferenceNode & vnode, std::ostream &file);
 
     void HandleConditionalStatement(const ConditionalStatementNode & csnode, std::ostream &file);
     void HandleConditionalExpression(const ConditionalExpressionNode & cenode, std::ostream &file);
