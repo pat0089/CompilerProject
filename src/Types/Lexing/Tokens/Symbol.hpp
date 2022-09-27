@@ -11,7 +11,7 @@ enum class SymbolType { None , Semicolon, Colon, Question_Mark,
     Plus, Minus, ForwardSlash,
     Asterisk, BackSlash, And,
     Hashmark, Exclaimation, Tilde,
-    Vertical_Line, Carrot, Percent
+    Vertical_Line, Carrot, Percent,
 };
 
 class Symbol : public Token {

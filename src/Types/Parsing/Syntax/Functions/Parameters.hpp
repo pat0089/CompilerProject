@@ -5,12 +5,8 @@
 class Parameters : public SyntaxNode {
 public:
     Parameters();
-
 private:
-
     std::string PrettyPrint() override;
-
 };
-
 
 #endif //COMPILERPROJECT_PARAMETERS_HPP

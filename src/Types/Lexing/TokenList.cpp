@@ -163,3 +163,7 @@ bool TokenList::match_all_braces() const {
 void TokenList::PutbackFront(Token *t) {
     _tokens->push_front(t);
 }
+
+bool TokenList::Empty() {
+    return _tokens->empty();
+}

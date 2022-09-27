@@ -5,6 +5,8 @@
 
 class ProgramNode : public SyntaxNode {
 public:
+    ProgramNode();
+
     explicit ProgramNode(FunctionNode * main);
     FunctionNode & Main() const;
     std::string PrettyPrint() override;
