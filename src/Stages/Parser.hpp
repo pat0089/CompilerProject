@@ -100,6 +100,8 @@ private:
     bool _verified = true;
 
     ExpressionNode *ParseFunctionCall();
+
+    GlobalNode *ParseGlobalDeclaration();
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP

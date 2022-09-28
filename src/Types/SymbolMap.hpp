@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 struct FunctionInfoTable {
     int numParams = -1;
@@ -20,6 +21,10 @@ public:
     void AddFunction(const std::string & fname, bool setCur = false);
     bool FindFunction(const std::string &name);
 
+    void AddGlobal(const std::string & gname, int val);
+    bool FindGlobal(const std::string & gname) const;
+    int GetGlobal(const std::string & gname) const;
+
     int AddVariable(const std::string & vname);
     int RedeclareVariable(const std::string & vname);
     void AddParameter(const std::string & pname, int stackIndex);
@@ -34,13 +39,20 @@ public:
     void ContainsReturn(bool val);
     bool ContainsReturn() const;
 
-    std::vector<std::string> FunctionVariableNames();
+    std::vector<std::string> GetFunctionVariableNames();
+    std::vector<std::pair<std::string, int>> GetGlobals();
+    std::vector<std::string> GetUninitializedGlobals();
+
 
     static std::string CurrentFunction;
     bool containsMain;
 
+    void SetGlobal(const std::string &gname, int val);
+
 private:
     std::unordered_map<std::string, FunctionInfoTable> * _functionMap = nullptr;
+    std::unordered_map<std::string, int> * _globalMap = nullptr;
+    std::unordered_set<std::string> * _globalScope = nullptr;
 };
 
 

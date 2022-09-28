@@ -1,7 +1,7 @@
 #ifndef COMPILERPROJECT_PARSEDNODES_HPP
 #define COMPILERPROJECT_PARSEDNODES_HPP
 #include "Functions/ProgramNode.hpp"
-
+#include "Functions/GlobalNode.hpp"
 #include "Functions/FunctionNode.hpp"
 #include "Functions/Parameters.hpp"
 #include "Functions/ParameterNode.hpp"
@@ -23,7 +23,7 @@
 #include "Expressions/ConstantNode.hpp"
 #include "Expressions/UnaryOperatorNode.hpp"
 #include "Expressions/BinaryOperatorNode.hpp"
-#include "Expressions/VariableNode.hpp"
+#include "Expressions/VariableReferenceNode.hpp"
 #include "Expressions/ConditionalExpressionNode.hpp"
 #include "Expressions/FunctionCallNode.hpp"
 #endif //COMPILERPROJECT_PARSEDNODES_HPP

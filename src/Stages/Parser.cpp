@@ -21,7 +21,21 @@ ProgramNode * Parser::ParseProgram() {
     auto temp = new ProgramNode();
 
     while (IsNextToken(KeywordType::Int)) {
-        temp->Add(ParseFunction());
+
+        //we change whether we're parsing a function or a global based on
+        // if the next token after the identifier is a parenthesis or not
+        auto type = (Keyword *)Front();
+        auto name = (Identifier *)Front();
+        if (IsNextToken(SymbolType::Open_Parenthesis)) {
+            PutbackFront(name);
+            PutbackFront(type);
+            temp->Add(ParseFunction());
+        } else {
+            PutbackFront(name);
+            PutbackFront(type);
+            temp->Add(ParseGlobalDeclaration());
+        }
+
     }
 
     return temp;
@@ -456,7 +470,7 @@ FactorNode *Parser::ParseFactor() {
             return (FactorNode *)temp;
         } else if (IsNextToken(TokenType::Identifier)) {
             auto tempToken = Front();
-            auto temp = new VariableNode(tempToken->GetRaw());
+            auto temp = new VariableReferenceNode(tempToken->GetRaw());
             delete tempToken;
             return (FactorNode *)temp;
         } else {
@@ -696,4 +710,31 @@ ExpressionNode *Parser::ParseFunctionCall() {
         return temp;
     }
     return nullptr;
+}
+
+GlobalNode *Parser::ParseGlobalDeclaration() {
+    GlobalNode * toReturn;
+
+    PopFront();
+    auto var_name = Front();
+    int value = 0;
+    ExpressionNode * option = nullptr;
+    if (IsNextToken(SymbolType::Equals)) {
+        PopFront();
+        option = ParseExpression();
+        if (option->Type() != SyntaxType::Constant) {
+            throw ParsingException("Global definition with non-constant: " + var_name->GetRaw());
+        } else {
+            value = ((ConstantNode *)option)->Value();
+        }
+    }
+
+    toReturn = new GlobalNode(var_name->GetRaw(), value);
+
+    delete var_name;
+
+    //DONT FORGET THE SEMICOLON
+    TryParse(SymbolType::Semicolon);
+
+    return toReturn;
 }
