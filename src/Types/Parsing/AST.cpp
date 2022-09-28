@@ -11,11 +11,19 @@ void AST::Program(ProgramNode * main) {
     _head = main;
 }
 
+/// Stream output operator
+/// \param os output stream
+/// \param ast AST to output
+/// \return reference to output stream
 std::ostream &operator<<(std::ostream &os, const AST &ast) {
     ast.recursiveOutput(ast._head, os, 0);
     return os;
 }
 
+/// Recursive output helper function
+/// \param snode pointer to syntax node to output
+/// \param os output stream
+/// \param layer layer of output
 void AST::recursiveOutput(const SyntaxNode * snode, std::ostream &os, int layer) const {
     if (!snode) return;
     for (int i = 0; i < layer; i++) {
@@ -29,6 +37,9 @@ void AST::recursiveOutput(const SyntaxNode * snode, std::ostream &os, int layer)
     }
 }
 
+/// Dispatch the correct syntax output function by casting for a reference
+/// \param snode node to output
+/// \param os output stream
 void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
     switch (snode->Type()) {
         case SyntaxType::Program:

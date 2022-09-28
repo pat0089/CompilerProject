@@ -4,10 +4,13 @@ using std::string;
 using std::istream;
 using std::deque;
 
+/// Lexes tokens from a source input stream
+/// \param is Source input stream
 void Compiler::Lex(istream & is) {
     _lexer->Lex(is);
 }
 
+/// Parses the lexed tokens
 void Compiler::Parse() {
     if (_lexer->Verify()) _parser->Parse(GetLexedList());
 }
@@ -45,6 +48,8 @@ Compiler::~Compiler() {
     delete _codeGenerator;
 }
 
+/// Generates an assembly file with the name supplied based on the parsed AST
+/// \param fname Name of the file we're generating
 void Compiler::Generate(const std::string & fname) {
     if (_lexer->Verify() && _parser->Verify()) {
         //pass the function map information over to the code generator
