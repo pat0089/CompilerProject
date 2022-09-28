@@ -1,18 +1,7 @@
-int putchar(int c);
+int foo;
 
 int main() {
-    putchar(72);
-    putchar(101);
-    putchar(108);
-    putchar(108);
-    putchar(111);
-    putchar(44);
-    putchar(32);
-    putchar(87);
-    putchar(111);
-    putchar(114);
-    putchar(108);
-    putchar(100);
-    putchar(33);
-    putchar(10);
+    for (int i = 0; i < 3; i = i + 1)
+        foo = foo + 1;
+    return foo;
 }

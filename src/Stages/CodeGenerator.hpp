@@ -105,7 +105,7 @@ private:
 
     void HandleDeclaration(const DeclarationNode & dnode, std::unordered_set<std::string> & current_context, std::ostream &file);
     void HandleAssignment(const AssignmentNode & anode, std::ostream &file);
-    void HandleVariable(const VariableReferenceNode & vnode, std::ostream &file);
+    void HandleVariableReference(const VariableReferenceNode & vnode, std::ostream &file);
 
     void HandleConditionalStatement(const ConditionalStatementNode & csnode, std::ostream &file);
     void HandleConditionalExpression(const ConditionalExpressionNode & cenode, std::ostream &file);
@@ -130,6 +130,12 @@ private:
     void HandleParameters(const Parameters &pnode, std::ostream &file);
 
     void HandleParameter(const ParameterNode &pnode, int index);
+
+    void HandleGlobal(const GlobalNode &gnode, std::ostream &file);
+
+    void MarkGlobalSymbol(const string &gsname, std::ostream &file);
+
+    void OutputGlobals(std::ostream &file);
 };
 
 

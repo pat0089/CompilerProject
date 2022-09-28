@@ -6,7 +6,10 @@ int CodeGenerator::_labelCount = 0;
 void CodeGenerator::Generate(const AST &ast, const string & fname) {
 
     std::stringstream ss;
+    ss << "\t.text\n";
     Generate(ast.Program(), ss);
+
+    OutputGlobals(ss);
 
     std::ofstream fout;
     fout.open(fname);
@@ -32,7 +35,8 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
         case SyntaxType::Body:
             HandleBody(*(BodyNode * )(snode), file);
             break;
-        case SyntaxType::Statement:
+        case SyntaxType::Global_Variable:
+            HandleGlobal(*(GlobalNode *)(snode), file);
             break;
         case SyntaxType::Return:
             HandleReturn(*(ReturnNode *)(snode), file);
@@ -50,7 +54,7 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
             HandleAssignment(*(AssignmentNode *)(snode), file);
             break;
         case SyntaxType::Variable_Reference:
-            HandleVariable(*(VariableReferenceNode *)(snode), file);
+            HandleVariableReference(*(VariableReferenceNode *) (snode), file);
             break;
         case SyntaxType::Conditional_Statement:
             HandleConditionalStatement(*(ConditionalStatementNode *)(snode), file);
@@ -80,7 +84,6 @@ void CodeGenerator::Generate(SyntaxNode * snode, std::ostream & file) {
         case SyntaxType::Expression:
         case SyntaxType::Term:
         case SyntaxType::Factor:
-        case SyntaxType::Declaration:
         default:
             break;
     }
@@ -101,6 +104,8 @@ void CodeGenerator::HandleFunction(const FunctionNode & fnode, std::ostream &fil
     // otherwise set the current function to the named function
     if (!_symbolMap->FindFunction(fnode.Name())) {
         _symbolMap->AddFunction(fnode.Name(), true);
+        if (!_symbolMap->FindFunction(fnode.Name()))
+            throw CodeGenerationException("Symbol redefinition: " + fnode.Name());
     } else {
         SymbolMap::CurrentFunction = fnode.Name();
     }
@@ -406,7 +411,7 @@ void CodeGenerator::ModuloRegisters(const string &reg1, const string &reg2, std:
 }
 
 void CodeGenerator::WriteFunctionName(const FunctionNode & fnode, std::ostream & file) {
-    file << ".globl " << fnode.Name() << "\n";
+    MarkGlobalSymbol(fnode.Name(), file);
     MarkLabel(fnode.Name(), file);
 }
 
@@ -541,7 +546,7 @@ void CodeGenerator::Map(const SymbolMap &smap) {
 
 void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::unordered_set<std::string> & current_context, std::ostream &file) {
     if (current_context.find(dnode.GetVariableName()) != current_context.end()) {
-        throw CodeGenerationException("Variable_Reference already declared in this scope: " + dnode.GetVariableName());
+        throw CodeGenerationException("Variable already declared in this scope: " + dnode.GetVariableName());
     } else {
         if (_symbolMap->FindVariable(dnode.GetVariableName()) == -1) {
             _symbolMap->AddVariable(dnode.GetVariableName());
@@ -555,20 +560,29 @@ void CodeGenerator::HandleDeclaration(const DeclarationNode &dnode, std::unorder
 }
 
 void CodeGenerator::HandleAssignment(const AssignmentNode &anode, std::ostream &file) {
-    int stack_var = _symbolMap->FindVariable(anode.GetVariableName());
-    if (stack_var == -1) {
-        throw CodeGenerationException("Variable_Reference Assignment before Declaration: " + anode.GetVariableName());
+    if (_symbolMap->FindGlobal(anode.GetVariableName())) {
+        Generate(anode.Child(0), file);
+        Movl("%eax, " + anode.GetVariableName(), file);
+    } else {
+        int stack_var = _symbolMap->FindVariable(anode.GetVariableName());
+        if (stack_var == -1) {
+            throw CodeGenerationException("Variable Assignment before Declaration: " + anode.GetVariableName());
+        }
+        Generate(anode.Child(0), file);
+        Movl("%eax, " + std::to_string(-4 * stack_var) + "(%ebp)", file);
     }
-    Generate(anode.Child(0), file);
-    Movl("%eax, " + std::to_string(-4 * stack_var) + "(%ebp)", file);
 }
 
-void CodeGenerator::HandleVariable(const VariableReferenceNode &vnode, std::ostream &file) {
-    int stack_var = _symbolMap->FindVariable(vnode.GetVariableName());
-    if (stack_var == -1) {
-        throw CodeGenerationException("Variable_Reference used before declaration: " + vnode.GetVariableName());
+void CodeGenerator::HandleVariableReference(const VariableReferenceNode &vnode, std::ostream &file) {
+    if (_symbolMap->FindGlobal(vnode.GetVariableName())) {
+        Movl(vnode.GetVariableName() + ", %eax", file);
     } else {
-        Movl(std::to_string(-4 * stack_var) + "(%ebp), %eax", file);
+        int stack_var = _symbolMap->FindVariable(vnode.GetVariableName());
+        if (stack_var == -1) {
+            throw CodeGenerationException("Variable used before declaration: " + vnode.GetVariableName());
+        } else {
+            Movl(std::to_string(-4 * stack_var) + "(%ebp), %eax", file);
+        }
     }
 }
 
@@ -623,7 +637,7 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     auto curScope = std::unordered_set<std::string>();
 
     if (bnode.Parent().Type() == SyntaxType::Function) {
-        auto names = context->FunctionVariableNames();
+        auto names = context->GetFunctionVariableNames();
         for (const auto& name : names) {
             curScope.insert(name);
         }
@@ -633,7 +647,7 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
     // other further declarations, assignments, and references
     //-pass Declaration the current symbol map to be updated as well as the
     // current set of declarations for the current context
-    //-pass Assignment and Variable_Reference the symbol map for referencing to the stack locations
+    //-pass Assignment and Variable the symbol map for referencing to the stack locations
     //-otherwise fall back on the recursive Generate for other types of statements since
     // they don't need to use the symbol map or context set
     for (int i = 0; i < bnode.ChildCount(); i++) {
@@ -788,4 +802,46 @@ bool CodeGenerator::requires_swap(OperatorType otype) {
     return otype == OperatorType::Minus ||
     otype == OperatorType::Division || otype == OperatorType::Modulo ||
     otype == OperatorType::Bitwise_RShift || otype == OperatorType::Bitwise_LShift;
+}
+
+void CodeGenerator::HandleGlobal(const GlobalNode &gnode, std::ostream &file) {
+    if (_symbolMap->FindGlobal(gnode.GetVariableName())) {
+        if (_symbolMap->GetGlobal(gnode.GetVariableName())) throw CodeGenerationException("Symbol redefinition: " + gnode.GetVariableName());
+        else _symbolMap->SetGlobal(gnode.GetVariableName(), gnode.Value());
+    } else {
+        _symbolMap->AddGlobal(gnode.GetVariableName(), gnode.Value());
+    }
+}
+
+void CodeGenerator::MarkGlobalSymbol(const string &gsname, std::ostream &file) {
+    file << ".globl " << gsname << "\n";
+}
+
+void CodeGenerator::OutputGlobals(std::ostream &file) {
+    auto initialized = _symbolMap->GetGlobals();
+    auto uninitialized = _symbolMap->GetUninitializedGlobals();
+
+    if (!initialized.empty()) {
+        for (const auto & kvp : initialized) {
+            MarkGlobalSymbol(kvp.first, file);
+        }
+        file << "\t.data\n";
+        file << "\t.align 4\n";
+        for (const auto & kvp : initialized) {
+            MarkLabel(kvp.first, file);
+            file << "\t.long " << std::to_string(kvp.second) << "\n";
+        }
+    }
+
+    if (!uninitialized.empty()) {
+        for (const auto & uninit : uninitialized) {
+            MarkGlobalSymbol(uninit, file);
+        }
+        file << "\t.bss\n";
+        file << "\t.align 4\n";
+        for (const auto & uninit : uninitialized) {
+            MarkLabel(uninit, file);
+            file << "\t.zero 4\n";
+        }
+    }
 }

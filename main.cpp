@@ -20,7 +20,7 @@ int main(int argc, char * argv[]) {
 
     try {
         Compiler.Parse();
-        cout << Compiler.GetAST();
+        //cout << Compiler.GetAST();
     } catch (ParsingException & e) {
         cerr << e.what();
         exit(1);
@@ -28,13 +28,13 @@ int main(int argc, char * argv[]) {
 
     auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
     try {
-        //Compiler.Generate(fnameWithoutFS);
+        Compiler.Generate(fnameWithoutFS);
     } catch (CodeGenerationException & e) {
         cerr << e.what();
         exit(2);
     }
 
-    //std::system(std::string("gcc -m32 " + fnameWithoutFS + ".s -o " + fnameWithoutFS).c_str());
+    std::system(std::string("gcc -m32 " + fnameWithoutFS + ".s -o " + fnameWithoutFS).c_str());
 
     return 0;
 }
