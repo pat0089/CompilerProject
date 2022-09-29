@@ -1,14 +1,21 @@
 #include "Symbol.hpp"
 using std::string;
 
+/// Reflect the token type for output
+/// \return string of token type
 string Symbol::TypeString() const {
     return "Symbol";
 }
 
+/// String Constructor
+/// \param toInit string to read
 Symbol::Symbol(const string &toInit) : Token(toInit) {
     _symType = GetSymType(toInit);
 }
 
+/// Get the symbol type from a string
+/// \param rawString string to test
+/// \return symbol type from string
 SymbolType Symbol::GetSymType(const string & rawString) {
     switch (rawString.c_str()[0]) {
         case ';':
@@ -67,10 +74,15 @@ SymbolType Symbol::GetSymType(const string & rawString) {
     return SymbolType::None;
 }
 
+/// Gets the symbol type
+/// \return type of symbol
 SymbolType Symbol::SymType() const {
     return _symType;
 }
 
+/// Reflect the symbol type into a string
+/// \param stype symbol type
+/// \return converted symbol type to string
 std::string Symbol::GetString(SymbolType stype) {
     switch (stype) {
         case SymbolType::Semicolon:
@@ -131,10 +143,14 @@ std::string Symbol::GetString(SymbolType stype) {
     }
 }
 
+/// Virtual copy constructor
+/// \return new smart pointer copy of this token
 Token *Symbol::Clone() {
     return new Symbol(*this);
 }
 
+/// Copy Constructor
+/// \param toCopy symbol to copy
 Symbol::Symbol(const Symbol &toCopy) : Token(toCopy) {
     _symType = toCopy._symType;
 }

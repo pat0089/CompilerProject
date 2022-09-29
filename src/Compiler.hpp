@@ -18,11 +18,6 @@ public:
     void Generate(const std::string & fname);
 
     const TokenList & GetLexedList() const;
-    const AST & GetAST() const;
-
-    Parser & GetParser() const;
-    Lexer & GetLexer() const;
-    CodeGenerator & GetCodeGenerator() const;
 
 private:
     Lexer * _lexer;

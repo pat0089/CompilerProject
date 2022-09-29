@@ -1,6 +1,4 @@
 #include "Parser.hpp"
-#include "../Types/Lexing/Tokens.hpp"
-#include "../Types/Parsing/Syntax/Expressions/FunctionCallNode.hpp"
 #include <sstream>
 using std::cerr;
 using std::endl;
@@ -39,21 +37,6 @@ ProgramNode * Parser::ParseProgram() {
     }
 
     return temp;
-}
-
-FunctionNode * Parser::ParseMainFunction() {
-
-    auto return_type = Front();
-    if (!IsTokenType(KeywordType::Int, return_type)) Fail(KeywordType::Int);
-
-    //check if function name is 'main'
-    auto func_name = Front();
-    if (!IsTokenType(TokenType::Identifier, func_name)) Fail(TokenType::Identifier);
-    if (func_name->GetRaw() != "main") Fail(false);
-    PutbackFront(func_name);
-    PutbackFront(return_type);
-
-    return ParseFunction();
 }
 
 FunctionNode * Parser::ParseFunction() {
@@ -481,12 +464,12 @@ FactorNode *Parser::ParseFactor() {
     }
 }
 
-bool Parser::IsTokenType(TokenType type, Token * t) const {
+bool Parser::IsTokenType(TokenType type, Token * t) {
     if (!t) return false;
     return t->Type() == type;
 }
 
-bool Parser::IsTokenType(SymbolType stype, Token * t) const {
+bool Parser::IsTokenType(SymbolType stype, Token * t) {
     if (IsTokenType(TokenType::Symbol, t)) {
         auto temp = (Symbol *) t;
         return temp->SymType() == stype;
@@ -494,7 +477,7 @@ bool Parser::IsTokenType(SymbolType stype, Token * t) const {
     return false;
 }
 
-bool Parser::IsTokenType(KeywordType ktype, Token * t) const {
+bool Parser::IsTokenType(KeywordType ktype, Token * t) {
     if (IsTokenType(TokenType::Keyword, t)) {
         auto temp = (Keyword *) t;
         return temp->KeyType() == ktype;
@@ -517,7 +500,7 @@ bool Parser::IsNextToken(KeywordType ktype) const {
     return IsTokenType(ktype, _curList->PeekFront());
 }
 
-SymbolType Parser::GetSymbolType(Token *t) const {
+SymbolType Parser::GetSymbolType(Token *t) {
     if (IsTokenType(TokenType::Symbol, t)) {
         auto temp = (Symbol *)t;
         return temp->SymType();
@@ -525,7 +508,7 @@ SymbolType Parser::GetSymbolType(Token *t) const {
     return SymbolType::None;
 }
 
-KeywordType Parser::GetKeywordType(Token *t) const {
+KeywordType Parser::GetKeywordType(Token *t) {
     if (IsTokenType(TokenType::Keyword, t)) {
         auto temp = (Keyword *)t;
         return temp->KeyType();
@@ -598,6 +581,42 @@ void Parser::Fail(bool hasMain, TokenType ttype, SymbolType stype, KeywordType k
                     case SymbolType::Asterisk:
                         err << "*";
                         break;
+                    case SymbolType::None:
+                        err << "None";
+                        break;
+                    case SymbolType::Colon:
+                        err << ":";
+                        break;
+                    case SymbolType::Question_Mark:
+                        err << "?";
+                        break;
+                    case SymbolType::Open_Chevron:
+                        err << "<";
+                        break;
+                    case SymbolType::Close_Chevron:
+                        err << ">";
+                        break;
+                    case SymbolType::Plus:
+                        err << "+";
+                        break;
+                    case SymbolType::Minus:
+                        err << "-";
+                        break;
+                    case SymbolType::ForwardSlash:
+                        err << "/";
+                        break;
+                    case SymbolType::BackSlash:
+                        err << "\\";
+                        break;
+                    case SymbolType::Vertical_Line:
+                        err << "|";
+                        break;
+                    case SymbolType::Carrot:
+                        err << "^";
+                        break;
+                    case SymbolType::Percent:
+                        err << "%";
+                        break;
                 }
                 err << "\'\n";
                 break;
@@ -616,8 +635,23 @@ void Parser::Fail(bool hasMain, TokenType ttype, SymbolType stype, KeywordType k
                     case KeywordType::Else:
                         err << "else";
                         break;
+                    case KeywordType::For:
+                        err << "for";
+                        break;
+                    case KeywordType::While:
+                        err << "while";
+                        break;
+                    case KeywordType::Do:
+                        err << "do";
+                        break;
+                    case KeywordType::Break:
+                        err << "break";
+                        break;
+                    case KeywordType::Continue:
+                        err << "continue";
+                        break;
                     case KeywordType::None:
-                    default:
+                        err << "None";
                         break;
                 }
                 err << "\"\n";
@@ -627,6 +661,8 @@ void Parser::Fail(bool hasMain, TokenType ttype, SymbolType stype, KeywordType k
                 break;
             case TokenType::Literal:
                 err << "Literal\n";
+                break;
+            case TokenType::None:
                 break;
         }
         err << endl;

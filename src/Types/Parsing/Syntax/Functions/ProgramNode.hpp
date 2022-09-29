@@ -7,14 +7,8 @@ class ProgramNode : public SyntaxNode {
 public:
     ProgramNode();
 
-    explicit ProgramNode(FunctionNode * main);
-    FunctionNode & Main() const;
     std::string PrettyPrint() override;
 
-    FunctionNode & operator[](int i) const;
-
-protected:
-    FunctionNode * _main;
 };
 
 #endif //COMPILERPROJECT_PROGRAMNODE_HPP

@@ -8,7 +8,7 @@ class Keyword : public Token {
 public:
     explicit Keyword(const std::string & toInit);
     Keyword(const Keyword & toCopy);
-    ~Keyword();
+    ~Keyword() override = default;
     std::string TypeString() const override;
     KeywordType KeyType() const;
     Token * Clone() override;

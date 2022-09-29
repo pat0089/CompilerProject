@@ -6,9 +6,7 @@
 class FactorNode : public TermNode {
 
     FactorNode();
-    explicit FactorNode(SyntaxType stype);
 
 };
-
 
 #endif //COMPILERPROJECT_FACTORNODE_HPP

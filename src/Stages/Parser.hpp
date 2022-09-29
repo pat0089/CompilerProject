@@ -38,7 +38,6 @@ private:
     //Lexed list manipulation functions
 
     ProgramNode * ParseProgram();
-    FunctionNode * ParseMainFunction();
 
     FunctionNode * ParseFunction();
     Parameters * ParseParameters();
@@ -84,18 +83,18 @@ private:
     bool IsNextToken(SymbolType stype) const;
     bool IsNextToken(KeywordType ktype) const;
 
-    bool IsTokenType(TokenType type, Token * t) const;
-    bool IsTokenType(SymbolType stype, Token * t) const;
-    bool IsTokenType(KeywordType ktype, Token * t) const;
+    static bool IsTokenType(TokenType type, Token * t) ;
+    static bool IsTokenType(SymbolType stype, Token * t) ;
+    static bool IsTokenType(KeywordType ktype, Token * t) ;
 
-    SymbolType GetSymbolType(Token * t) const;
-    KeywordType GetKeywordType(Token * t) const;
+    static SymbolType GetSymbolType(Token * t) ;
+    static KeywordType GetKeywordType(Token * t) ;
 
     void TryParse(TokenType type);
     void TryParse(SymbolType stype);
     void TryParse(KeywordType ktype);
 
-    bool IsUnaryOperation(Token * t);
+    static bool IsUnaryOperation(Token * t);
 
     bool _verified = true;
 

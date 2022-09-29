@@ -14,5 +14,4 @@ private:
     SymbolType _stype = SymbolType::None;
 };
 
-
 #endif //COMPILERPROJECT_UNARYOPERATORNODE_HPP

@@ -1,5 +1,5 @@
 #include "SyntaxNode.hpp"
-#include <type_traits>
+
 /// Default constructor, no children or parent and "None" type
 SyntaxNode::SyntaxNode() : _childCount(0), _parent(nullptr), _children(nullptr), _stype(SyntaxType::None) { }
 
@@ -27,7 +27,7 @@ void SyntaxNode::Parent(SyntaxNode *parent) {
 /// \param childCount Number of children in the array
 void SyntaxNode::Add(SyntaxNode **children, int childCount) {
     //copy over child reference array
-    SyntaxNode ** oldChildren = new SyntaxNode* [_childCount];
+    auto ** oldChildren = new SyntaxNode* [_childCount];
     for (int i = 0; i < _childCount; i++) {
         oldChildren[i] = _children[i];
     }
@@ -86,7 +86,7 @@ void SyntaxNode::Add(SyntaxNode * child) {
 /// \param i index of child to remove
 void SyntaxNode::Remove(int i) {
     //copy over all old children besides the one at index i
-    SyntaxNode ** childrenCopy = new SyntaxNode* [_childCount - 1];
+    auto ** childrenCopy = new SyntaxNode* [_childCount - 1];
     int iterator = 0;
     for (int index = 0; index < _childCount; i++) {
         if (index == i) {

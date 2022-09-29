@@ -6,11 +6,10 @@
 class ConstantNode : public ExpressionNode {
 public:
     ConstantNode();
-    ~ConstantNode();
+    ~ConstantNode() override;
     explicit ConstantNode(int toInit);
     explicit ConstantNode(Literal * lit);
     int & Value() const;
-    void Value(int i);
     std::string PrettyPrint() override;
 
 private:

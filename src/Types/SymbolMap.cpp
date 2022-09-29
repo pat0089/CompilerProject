@@ -4,7 +4,7 @@ std::string SymbolMap::CurrentFunction;
 
 /// Default Constructor
 /// initializes an empty map for symbols to be added to
-SymbolMap::SymbolMap() : _functionMap(new std::unordered_map<std::string, FunctionInfoTable>()), _globalMap(new std::unordered_map<std::string, int>()), _globalScope(new std::unordered_set<std::string>()) {}
+SymbolMap::SymbolMap() : _functionMap(new std::unordered_map<std::string, FunctionInfoTable>()), _globalMap(new std::unordered_map<std::string, int>()), _globalScope(new std::unordered_set<std::string>()), containsMain(false) {}
 
 /// Destructor
 SymbolMap::~SymbolMap() {
@@ -72,6 +72,7 @@ SymbolMap::SymbolMap(const SymbolMap &toCopy) {
     _functionMap = new std::unordered_map<std::string, FunctionInfoTable>(*toCopy._functionMap);
     _globalScope = new std::unordered_set<std::string>(*toCopy._globalScope);
     _globalMap = new std::unordered_map<std::string, int>(*toCopy._globalMap);
+    containsMain = toCopy.containsMain;
 }
 
 /// Redeclare the stack index of a variable already in the SymbolMap for the current function

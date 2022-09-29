@@ -19,23 +19,6 @@ const TokenList & Compiler::GetLexedList() const {
     return _lexer->GetList();
 }
 
-const AST &Compiler::GetAST() const {
-    return _parser->GetAST();
-}
-
-Parser &Compiler::GetParser() const {
-    return *_parser;
-}
-
-Lexer &Compiler::GetLexer() const {
-    return *_lexer;
-}
-
-CodeGenerator& Compiler::GetCodeGenerator() const
-{
-    return *_codeGenerator;
-}
-
 Compiler::Compiler() {
     _lexer = new Lexer();
     _parser = new Parser();

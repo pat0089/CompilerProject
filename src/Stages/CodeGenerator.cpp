@@ -3,6 +3,10 @@
 
 int CodeGenerator::_labelCount = 0;
 
+CodeGenerator::~CodeGenerator() {
+    delete _symbolMap;
+}
+
 void CodeGenerator::Generate(const AST &ast, const string & fname) {
 
     std::stringstream ss;
@@ -220,7 +224,7 @@ void CodeGenerator::HandleReturn(const ReturnNode & rnode, std::ostream &file) {
     WriteReturn(file);
 }
 
-void CodeGenerator::HandleUnaryOperator(UnaryOperatorNode &uonode, std::ostream &file) {
+void CodeGenerator::HandleUnaryOperator(const UnaryOperatorNode &uonode, std::ostream &file) {
     Generate(uonode.Child(0), file);
     switch (uonode.GetOperator()) {
         case OperatorType::Bitwise_Complement:
@@ -632,7 +636,7 @@ void CodeGenerator::HandleConditionalExpression(const ConditionalExpressionNode 
 
 void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
 
-    SymbolMap * context = new SymbolMap(*_symbolMap);
+    auto * context = new SymbolMap(*_symbolMap);
 
     auto curScope = std::unordered_set<std::string>();
 
@@ -670,10 +674,6 @@ void CodeGenerator::HandleBody(const BodyNode & bnode, std::ostream &file) {
 
 void CodeGenerator::AddToRegister(int value, const std::string & reg, std::ostream &file) {
     file << "\taddl\t$" << value << ", %" << reg << "\n";
-}
-
-CodeGenerator::~CodeGenerator() {
-    delete _symbolMap;
 }
 
 void CodeGenerator::HandleContinue(const ContinueNode &cnode, std::ostream &file) {
@@ -755,7 +755,7 @@ void CodeGenerator::HandleForLoop(const ForLoopNode &fnode, std::ostream &file) 
     _endLoopBody = CreateNewLabel();
 
     std::unordered_set<std::string> curScope;
-    SymbolMap * context = new SymbolMap(*_symbolMap);
+    auto * context = new SymbolMap(*_symbolMap);
 
     if (fnode.Child(0)->Type() == SyntaxType::Declaration) {
         HandleDeclaration(*(DeclarationNode *)fnode.Child(0), curScope, file);
