@@ -19,6 +19,8 @@ Lexer::~Lexer() {
     delete _tokens;
 }
 
+/// Lexes in a list of tokens from an input stream
+/// \param is input stream to read
 void Lexer::Lex(istream & is) {
     is >> *_tokens;
 }
@@ -27,6 +29,10 @@ const TokenList & Lexer::GetList() const {
     return *_tokens;
 }
 
+/// Stream input operator
+/// \param is input stream
+/// \param lexer lexer to lex with
+/// \return reference to input stream
 istream &operator>>(istream &is, Lexer &lexer) {
     is >> *lexer._tokens;
     return is;
@@ -37,6 +43,9 @@ ostream &operator<<(ostream &os, const Lexer &lexer) {
     return os;
 }
 
+/// Lexes the next proper token from the token stream
+/// \param is input stream
+/// \return string containing the lexed token
 string Lexer::LexNextToken(istream & is) {
     string toTokenize, toTest;
     char cur;
@@ -77,6 +86,8 @@ string Lexer::LexNextToken(istream & is) {
     return toTokenize;
 }
 
+/// Verify if the tokens
+/// \return
 bool Lexer::Verify() {
     if (!_verified) _verified = _tokens->Verify();
     return _verified;

@@ -6,6 +6,8 @@ ConditionalStatementNode::ConditionalStatementNode(ExpressionNode *exp, Statemen
     if (option) Add(option);
 }
 
+/// Virtual output string for each type of syntax
+/// \return respective string containing pertinent information from this syntax node
 std::string ConditionalStatementNode::PrettyPrint() {
     return "Conditional Statement: ";
 }

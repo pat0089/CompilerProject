@@ -40,7 +40,7 @@ void AST::recursiveOutput(const SyntaxNode * snode, std::ostream &os, int layer)
 /// Dispatch the correct syntax output function by casting for a reference
 /// \param snode node to output
 /// \param os output stream
-void AST::outputNode(const SyntaxNode * snode, std::ostream & os) const {
+void AST::outputNode(const SyntaxNode * snode, std::ostream & os) {
     switch (snode->Type()) {
         case SyntaxType::Program:
             os << *(ProgramNode *)snode << "\n";

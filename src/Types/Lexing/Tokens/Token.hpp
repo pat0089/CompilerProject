@@ -13,7 +13,6 @@ public:
     TokenType Type() const;
 
     std::string & GetRaw() const;
-    void SetRaw(const std::string & toSet);
 
     friend std::ostream & operator << (std::ostream & os, const Token & token);
     bool operator == (const Token & token) const;

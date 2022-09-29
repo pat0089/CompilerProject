@@ -1,21 +1,10 @@
 #include "ProgramNode.hpp"
 using std::string;
 
-ProgramNode::ProgramNode(FunctionNode * main) : SyntaxNode(SyntaxType::Program) {
-    _main = main;
-    Add(main);
-}
+ProgramNode::ProgramNode() : SyntaxNode(SyntaxType::Program) {}
 
-FunctionNode &ProgramNode::Main() const {
-    return *_main;
-}
-
+/// Virtual output string for each type of syntax
+/// \return respective string containing pertinent information from this syntax node
 string ProgramNode::PrettyPrint() {
     return "Program";
 }
-
-FunctionNode &ProgramNode::operator[](int i) const {
-    return *(FunctionNode *)_children[i];
-}
-
-ProgramNode::ProgramNode() : SyntaxNode(SyntaxType::Program) {}

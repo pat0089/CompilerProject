@@ -10,10 +10,8 @@ int & ConstantNode::Value() const {
     return *_val;
 }
 
-void ConstantNode::Value(int i) {
-    *_val = i;
-}
-
+/// Virtual output string for each type of syntax
+/// \return respective string containing pertinent information from this syntax node
 string ConstantNode::PrettyPrint() {
-    return string("Constant: ") + string(std::to_string(Value()));
+    return "Constant: " + std::to_string(Value());
 }

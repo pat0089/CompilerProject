@@ -15,24 +15,30 @@ TokenList::~TokenList() {
     delete _tokens;
 }
 
-void TokenList::AddToken(Token * token) {
-    _tokens->push_back(token);
-}
-
+/// Peeks at the type of the front token
+/// \return token type
 TokenType TokenList::PeekType() const {
     return _tokens->front()->Type();
 }
 
+/// Peeks at the front of the list
+/// \return pointer to Token at front
 Token * TokenList::PeekFront() const {
     return _tokens->front();
 }
 
+/// Copy Constructor
+/// \param toCopy list to copy
 TokenList::TokenList(const TokenList &toCopy) : _tokens(new deque<Token *>) {
     for (auto & _token : *toCopy._tokens) {
         _tokens->emplace_back(_token->Clone());
     }
 }
 
+/// Stream output operator
+/// \param os output operator
+/// \param tokenList token list to output
+/// \return reference to output stream
 ostream &operator<<(ostream &os, const TokenList &tokenList) {
     for (auto & _token : *tokenList._tokens) {
         os << *_token << " | ";
@@ -40,6 +46,10 @@ ostream &operator<<(ostream &os, const TokenList &tokenList) {
     return os;
 }
 
+/// Stream input operator
+/// \param is input stream
+/// \param tokenList token list to read in to
+/// \return reference to input stream
 istream &operator>>(istream &is, TokenList &tokenList) {
     while (!is.eof()) {
         auto checkForNull = Token::Create(Lexer::LexNextToken(is));
@@ -48,52 +58,8 @@ istream &operator>>(istream &is, TokenList &tokenList) {
     return is;
 }
 
-Token * TokenList::SeekToNext(TokenType type, Token * from) {
-    auto start = _tokens->begin();
-    if (from != nullptr) start = std::find(_tokens->begin(), _tokens->end(), from);
-
-    for (auto cur = start; cur != _tokens->end(); cur++) {
-        if ((*cur)->Type() == type && *cur != from) return *cur;
-    }
-    return nullptr;
-}
-
-Token * TokenList::SeekToNextSymbol(SymbolType stype) {
-    for (auto i = SeekToNext(TokenType::Symbol); i != nullptr; i = SeekToNext(TokenType::Symbol, i)) {
-        auto * symCast = (Symbol*)i;
-        if (symCast->SymType() == stype) {
-            return i;
-        }
-    }
-    return nullptr;
-}
-
-Token * TokenList::SeekToNextKeyword(KeywordType ktype) {
-    for (auto i = SeekToNext(TokenType::Keyword); i != nullptr; i = SeekToNext(TokenType::Keyword, i)) {
-        auto * keyCast = (Keyword*)i;
-        if (keyCast->KeyType() == ktype) {
-            return i;
-        }
-    }
-    return nullptr;
-}
-
-Token * TokenList::SeekToNextLiteral() {
-    return SeekToNext(TokenType::Literal);
-}
-
-Token * TokenList::SeekToNextSymbol() {
-    return SeekToNext(TokenType::Symbol);
-}
-
-Token * TokenList::SeekToNextKeyword() {
-    return SeekToNext(TokenType::Keyword);
-}
-
-Token * TokenList::SeekToNextIdentifier() {
-    return SeekToNext(TokenType::Identifier);
-}
-
+/// Pop the token off the front of the list
+/// \return the token we popped off
 Token * TokenList::PopFront() {
     if (_tokens->front() != nullptr) {
         Token *toPop = _tokens->front();
@@ -103,32 +69,23 @@ Token * TokenList::PopFront() {
     return nullptr;
 }
 
-TokenList *TokenList::SeekToPop(Token *toPopAfter) {
-    auto toReturn = new TokenList();
-    auto i = _tokens->front();
-    while (i != toPopAfter) {
-        i = _tokens->front();
-        toReturn->_tokens->push_back(_tokens->front());
-        _tokens->pop_front();
-    }
-    return toReturn;
-}
-
 Token &TokenList::operator[](int i) {
     return *_tokens->at(i);
 }
 
-
+/// Verify the token list contains close characters for each open one
+/// \return All braces match one another
 bool TokenList::Verify() const {
     return match_all_braces();
 }
 
+/// Matches all open braces, brackets, and parentheses with their respective closes
+/// \return whether or not all braces have a open and close match
 bool TokenList::match_all_braces() const {
 
     std::stack<SymbolType> st;
 
-    for (int i = 0; i < _tokens->size(); i++) {
-        Token *temp = _tokens->at(i);
+    for (auto temp : *_tokens) {
         TokenType type = temp->Type();
         if (type != TokenType::Symbol) continue;
         auto *stemp = (Symbol *) temp;
@@ -160,10 +117,14 @@ bool TokenList::match_all_braces() const {
     return st.empty();
 }
 
+/// Puts back the given token to the front of the list of tokens
+/// \param t token to put back
 void TokenList::PutbackFront(Token *t) {
     _tokens->push_front(t);
 }
 
+/// Is the list empty?
+/// \return list is empty or not
 bool TokenList::Empty() {
     return _tokens->empty();
 }
