@@ -16,4 +16,4 @@ After making this compiler, I planned to make a general-purpose compiler, but ma
 
 [See my Trello board for updates and new features](https://trello.com/b/TD2Sp6JF/compilerproject)
 
-Update (9/27/2022): I have finished the Nora Sandler compiler series and probably won't be making any significant updates to this project in the future, unless the great inspiration strikes me to do so.
+Update (2/3/2023): I am back from my hiatus on this project, so I should be pumping out a couple of features soon unguided by an explicit tutorial, although I may use a C-to-Assembly translator to help me with the implementation of certain features.
