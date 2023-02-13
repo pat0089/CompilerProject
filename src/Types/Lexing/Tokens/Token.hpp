@@ -18,7 +18,7 @@ public:
     bool operator == (const Token & token) const;
 
     //Factory function for Token subtypes
-    static Token * Create(const std::string & rawString);
+    static Token * Create(const std::string & rawString, int curChar, int curLine);
 
     //copy constructor for derived members
     virtual Token * Clone() = 0;
@@ -27,6 +27,9 @@ public:
     virtual ~Token();
 
     virtual std::string TypeString() const = 0;
+
+    int GetChar() const;
+    int GetLine() const;
 
 protected:
 
@@ -37,7 +40,10 @@ protected:
     static TokenType GetType(const std::string & rawString);
 
     Token();
-    explicit Token(const std::string & chars);
+    explicit Token(const std::string & chars, int curChar, int curLine);
+
+    int _line = 0;
+    int _char = 0;
 
 };
 

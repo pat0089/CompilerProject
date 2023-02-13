@@ -4,14 +4,20 @@ using std::cerr;
 using std::endl;
 
 const AST &Parser::GetAST() const {
-    return _ast;
+    return *_ast;
 }
 
 void Parser::Parse(const TokenList & tokens) {
     //create a copy of the token list to modify and parse as necessary
     _curList = new TokenList(tokens);
     _verified = true;
-    _ast.Program(ParseProgram());
+    try {
+        _ast->Program(ParseProgram());
+    } catch (ParsingException & e) {
+        delete _ast;
+        delete _curList;
+        throw e;
+    }
 }
 
 ProgramNode * Parser::ParseProgram() {
@@ -46,7 +52,7 @@ FunctionNode * Parser::ParseFunction() {
 
     Identifier * name = nullptr;
     if (!IsNextToken(TokenType::Identifier)) {
-        Fail(TokenType::Identifier);
+        Fail(TokenType::Identifier, Front());
     } else {
         name = (Identifier *)Front();
     }
@@ -110,7 +116,7 @@ ParameterNode * Parser::ParseParameter() {
     Identifier * name = nullptr;
 
     if (!IsNextToken(TokenType::Identifier)) {
-        Fail(TokenType::Identifier);
+        Fail(TokenType::Identifier, Front());
     } else {
         name = (Identifier *)Front();
     }
@@ -169,7 +175,7 @@ StatementNode * Parser::ParseStatement() {
     } else {
         //check for loop keywords
         auto temp = (Keyword *)Front();
-        if (temp->Type() != TokenType::Keyword) Fail(TokenType::Keyword);
+        if (temp->Type() != TokenType::Keyword) Fail(TokenType::Keyword, temp);
 
         //for loop
         if (temp->KeyType() == KeywordType::For) {
@@ -246,12 +252,15 @@ ExpressionNode * Parser::ParseExpression() {
 
 ExpressionNode *Parser::ParseConditionalExpression() {
     ExpressionNode * conditional_expr = ParseLogicalOrExpression();
+    if (conditional_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     if (IsNextToken(SymbolType::Question_Mark)) {
         PopFront();
         auto expr = ParseExpression();
+        if (expr == nullptr) throw ParsingException("Missing second expression!");
         TryParse(SymbolType::Colon);
         auto expr2 = ParseConditionalExpression();
+        if (expr2 == nullptr) throw ParsingException("Missing third expression!");
         conditional_expr = new ConditionalExpressionNode(conditional_expr, expr, expr2);
     }
 
@@ -262,6 +271,7 @@ ExpressionNode *Parser::ParseConditionalExpression() {
 
 ExpressionNode *Parser::ParseLogicalOrExpression() {
     ExpressionNode * logical_or_expr = ParseLogicalAndExpression();
+    if (logical_or_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Vertical_Line)) {
         auto tempToken = Front();
@@ -272,6 +282,7 @@ ExpressionNode *Parser::ParseLogicalOrExpression() {
             op2 = SymbolType::Vertical_Line;
         }
         auto next_expr = ParseLogicalAndExpression();
+        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
         logical_or_expr = new BinaryOperatorNode(op, op2, logical_or_expr, next_expr);
         delete tempToken;
     }
@@ -281,6 +292,7 @@ ExpressionNode *Parser::ParseLogicalOrExpression() {
 
 ExpressionNode *Parser::ParseLogicalAndExpression() {
     ExpressionNode * logical_and_expr = ParseBitwiseOrExpression();
+    if (logical_and_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::And)) {
         auto tempToken = Front();
@@ -291,6 +303,7 @@ ExpressionNode *Parser::ParseLogicalAndExpression() {
             op2 = SymbolType::And;
         }
         auto next_expr = ParseBitwiseOrExpression();
+        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
         logical_and_expr = new BinaryOperatorNode(op, op2, logical_and_expr, next_expr);
         delete tempToken;
     }
@@ -300,10 +313,13 @@ ExpressionNode *Parser::ParseLogicalAndExpression() {
 
 ExpressionNode *Parser::ParseBitwiseOrExpression() {
     ExpressionNode * bitwise_or_expr = ParseBitwiseXorExpression();
+    if (bitwise_or_expr == nullptr) throw ParsingException("Failed to parse first expression!");
+
     while (IsNextToken(SymbolType::Vertical_Line)) {
         auto temp = Front();
         if (!IsNextToken(SymbolType::Vertical_Line)) {
             auto next_expr = ParseBitwiseXorExpression();
+            if (next_expr == nullptr) throw ParsingException("Missing second expression!");
             bitwise_or_expr = new BinaryOperatorNode(SymbolType::Vertical_Line, SymbolType::None, bitwise_or_expr, next_expr);
             delete temp;
         } else {
@@ -316,9 +332,12 @@ ExpressionNode *Parser::ParseBitwiseOrExpression() {
 
 ExpressionNode *Parser::ParseBitwiseXorExpression() {
     ExpressionNode * bitwise_xor_expr = ParseBitwiseAndExpression();
+    if (bitwise_xor_expr == nullptr) throw ParsingException("Failed to parse first expression!");
+
     while (IsNextToken(SymbolType::Carrot)) {
         TryParse(SymbolType::Carrot);
         auto next_expr = ParseBitwiseAndExpression();
+        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
         bitwise_xor_expr = new BinaryOperatorNode(SymbolType::Carrot, SymbolType::None, bitwise_xor_expr, next_expr);
     }
     return bitwise_xor_expr;
@@ -326,10 +345,13 @@ ExpressionNode *Parser::ParseBitwiseXorExpression() {
 
 ExpressionNode *Parser::ParseBitwiseAndExpression() {
     ExpressionNode * bitwise_and_expr = ParseEqualityExpression();
+    if (bitwise_and_expr == nullptr) throw ParsingException("Failed to parse first expression!");
+
     while (IsNextToken(SymbolType::And)) {
         auto temp = Front();
         if (!IsNextToken(SymbolType::And)) {
             auto next_expr = ParseEqualityExpression();
+            if (next_expr == nullptr) throw ParsingException("Missing second expression!");
             bitwise_and_expr = new BinaryOperatorNode(SymbolType::And, SymbolType::None, bitwise_and_expr, next_expr);
             delete temp;
         } else {
@@ -342,6 +364,7 @@ ExpressionNode *Parser::ParseBitwiseAndExpression() {
 
 ExpressionNode *Parser::ParseEqualityExpression() {
     ExpressionNode * equality_expr = ParseRelationalExpression();
+    if (equality_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Equals) || IsNextToken(SymbolType::Exclaimation)) {
         auto tempToken = Front();
@@ -354,6 +377,7 @@ ExpressionNode *Parser::ParseEqualityExpression() {
         if (op2 == SymbolType::None) throw ParsingException("Invalid Left Side Operator");
 
         auto next_expr = ParseRelationalExpression();
+        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
         equality_expr = new BinaryOperatorNode(op, op2, equality_expr, next_expr);
         delete tempToken;
     }
@@ -363,6 +387,7 @@ ExpressionNode *Parser::ParseEqualityExpression() {
 
 ExpressionNode *Parser::ParseRelationalExpression() {
     ExpressionNode * relational_expr = ParseBitwiseShiftExpression();
+    if (relational_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
         auto tempToken = Front();
@@ -373,6 +398,7 @@ ExpressionNode *Parser::ParseRelationalExpression() {
             op2 = SymbolType::Equals;
         }
         auto next_expr = ParseBitwiseShiftExpression();
+        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
         relational_expr = new BinaryOperatorNode(op, op2, relational_expr, next_expr);
         delete tempToken;
     }
@@ -391,6 +417,7 @@ ExpressionNode *Parser::ParseBitwiseShiftExpression() {
         {
             PopFront();
             auto next_expr = ParseAdditiveExpression();
+            if (next_expr == nullptr) throw ParsingException("Missing second expression!");
             shift_expr = new BinaryOperatorNode(op, op, shift_expr, next_expr);
             delete tempToken;
         } else {
@@ -405,11 +432,13 @@ ExpressionNode *Parser::ParseBitwiseShiftExpression() {
 
 ExpressionNode *Parser::ParseAdditiveExpression() {
     ExpressionNode * term = ParseTerm();
+    if (term == nullptr) throw ParsingException("Missing first term!");
 
     while (IsNextToken(SymbolType::Plus) || IsNextToken(SymbolType::Minus)) {
         auto tempToken = Front();
         SymbolType op = GetSymbolType(tempToken);
         auto next_term = ParseTerm();
+        if (next_term == nullptr) throw ParsingException("Missing second term!");
         term = new BinaryOperatorNode(op, SymbolType::None, term, next_term);
         delete tempToken;
     }
@@ -419,11 +448,13 @@ ExpressionNode *Parser::ParseAdditiveExpression() {
 
 TermNode *Parser::ParseTerm() {
     TermNode * factor = ParseFactor();
+    if (factor == nullptr) throw ParsingException("Failed to parse first factor!");
 
     while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash) || IsNextToken(SymbolType::Percent)) {
         auto tempToken = Front();
         SymbolType op = GetSymbolType(tempToken);
         auto next_factor = ParseFactor();
+        if (next_factor == nullptr) throw ParsingException("Missing second factor!");
         factor = (TermNode *)(new BinaryOperatorNode(op, SymbolType::None, factor, next_factor));
         delete tempToken;
     }
@@ -524,162 +555,193 @@ Token *Parser::PeekFront() {
     return _curList->PeekFront();
 }
 
-//fail should output a bit more information now
-void Parser::Fail(bool hasMain, TokenType ttype, SymbolType stype, KeywordType ktype) {
-    std::stringstream err;
-    if (_verified) _verified = false;
+void Parser::Fail(bool hasMain) {
     if (!hasMain) {
-        err << "FAIL0!: No \'main\' function found\n";
-    } else {
-        err << "FAIL1!: Unexpected Token, Expected: ";
-        switch (ttype) {
-            case TokenType::Symbol:
-                err << "Symbol \'";
-                switch (stype) {
-                    case SymbolType::Semicolon:
-                        err << ";";
-                        break;
-                    case SymbolType::Open_Parenthesis:
-                        err << "(";
-                        break;
-                    case SymbolType::Close_Parenthesis:
-                        err << ")";
-                        break;
-                    case SymbolType::Open_Bracket:
-                        err << "[";
-                        break;
-                    case SymbolType::Close_Bracket:
-                        err << "]";
-                        break;
-                    case SymbolType::Open_Brace:
-                        err << "{";
-                        break;
-                    case SymbolType::Close_Brace:
-                        err << "}";
-                        break;
-                    case SymbolType::Equals:
-                        err << "=";
-                        break;
-                    case SymbolType::Comma:
-                        err << ",";
-                        break;
-                    case SymbolType::Period:
-                        err << ".";
-                        break;
-                    case SymbolType::Tilde:
-                        err << "~";
-                        break;
-                    case SymbolType::Exclaimation:
-                        err << "!";
-                        break;
-                    case SymbolType::Hashmark:
-                        err << "#";
-                        break;
-                    case SymbolType::And:
-                        err << "&";
-                        break;
-                    case SymbolType::Asterisk:
-                        err << "*";
-                        break;
-                    case SymbolType::None:
-                        err << "None";
-                        break;
-                    case SymbolType::Colon:
-                        err << ":";
-                        break;
-                    case SymbolType::Question_Mark:
-                        err << "?";
-                        break;
-                    case SymbolType::Open_Chevron:
-                        err << "<";
-                        break;
-                    case SymbolType::Close_Chevron:
-                        err << ">";
-                        break;
-                    case SymbolType::Plus:
-                        err << "+";
-                        break;
-                    case SymbolType::Minus:
-                        err << "-";
-                        break;
-                    case SymbolType::ForwardSlash:
-                        err << "/";
-                        break;
-                    case SymbolType::BackSlash:
-                        err << "\\";
-                        break;
-                    case SymbolType::Vertical_Line:
-                        err << "|";
-                        break;
-                    case SymbolType::Carrot:
-                        err << "^";
-                        break;
-                    case SymbolType::Percent:
-                        err << "%";
-                        break;
-                }
-                err << "\'\n";
-                break;
-            case TokenType::Keyword:
-                err << "Keyword \"";
-                switch (ktype) {
-                    case KeywordType::Int:
-                        err << "int";
-                        break;
-                    case KeywordType::Return:
-                        err << "return";
-                        break;
-                    case KeywordType::If:
-                        err << "if";
-                        break;
-                    case KeywordType::Else:
-                        err << "else";
-                        break;
-                    case KeywordType::For:
-                        err << "for";
-                        break;
-                    case KeywordType::While:
-                        err << "while";
-                        break;
-                    case KeywordType::Do:
-                        err << "do";
-                        break;
-                    case KeywordType::Break:
-                        err << "break";
-                        break;
-                    case KeywordType::Continue:
-                        err << "continue";
-                        break;
-                    case KeywordType::None:
-                        err << "None";
-                        break;
-                }
-                err << "\"\n";
-                break;
-            case TokenType::Identifier:
-                err << "Identifier\n";
-                break;
-            case TokenType::Literal:
-                err << "Literal\n";
-                break;
-            case TokenType::None:
-                break;
-        }
-        err << endl;
+        Fail(std::string("FAIL1!: No \'main\' function found\n"));
     }
-    throw ParsingException(err.str());
 }
 
-void Parser::Fail(TokenType type)  {
-    Fail(true, type, SymbolType::None, KeywordType::None);
+void Parser::Fail(TokenType ttype, Token * errToken) {
+    std::stringstream err;
+    err << "FAIL0!: Expected ";
+    switch (ttype) {
+        case TokenType::Symbol:
+            err << "Symbol";
+            break;
+        case TokenType::Keyword:
+            err << "Keyword";
+            break;
+        case TokenType::Identifier:
+            err << "Identifier";
+            break;
+        case TokenType::Literal:
+            err << "Literal";
+            break;
+        case TokenType::None:
+            break;
+    }
+    err << "Got ";
+    OutputToken(errToken, err);
+    delete errToken;
+    Fail(err.str());
 }
 
-void Parser::Fail(SymbolType stype) {
-    Fail(true, TokenType::Symbol, stype, KeywordType::None);
+void Parser::Fail(SymbolType stype, Token * errToken) {
+    std::stringstream err;
+    err << "FAIL0!: Expected Symbol \"";
+    switch (stype) {
+        case SymbolType::Semicolon:
+            err << ";";
+            break;
+        case SymbolType::Open_Parenthesis:
+            err << "(";
+            break;
+        case SymbolType::Close_Parenthesis:
+            err << ")";
+            break;
+        case SymbolType::Open_Bracket:
+            err << "[";
+            break;
+        case SymbolType::Close_Bracket:
+            err << "]";
+            break;
+        case SymbolType::Open_Brace:
+            err << "{";
+            break;
+        case SymbolType::Close_Brace:
+            err << "}";
+            break;
+        case SymbolType::Equals:
+            err << "=";
+            break;
+        case SymbolType::Comma:
+            err << ",";
+            break;
+        case SymbolType::Period:
+            err << ".";
+            break;
+        case SymbolType::Tilde:
+            err << "~";
+            break;
+        case SymbolType::Exclaimation:
+            err << "!";
+            break;
+        case SymbolType::Hashmark:
+            err << "#";
+            break;
+        case SymbolType::And:
+            err << "&";
+            break;
+        case SymbolType::Asterisk:
+            err << "*";
+            break;
+        case SymbolType::None:
+            err << "None";
+            break;
+        case SymbolType::Colon:
+            err << ":";
+            break;
+        case SymbolType::Question_Mark:
+            err << "?";
+            break;
+        case SymbolType::Open_Chevron:
+            err << "<";
+            break;
+        case SymbolType::Close_Chevron:
+            err << ">";
+            break;
+        case SymbolType::Plus:
+            err << "+";
+            break;
+        case SymbolType::Minus:
+            err << "-";
+            break;
+        case SymbolType::ForwardSlash:
+            err << "/";
+            break;
+        case SymbolType::BackSlash:
+            err << "\\";
+            break;
+        case SymbolType::Vertical_Line:
+            err << "|";
+            break;
+        case SymbolType::Carrot:
+            err << "^";
+            break;
+        case SymbolType::Percent:
+            err << "%";
+            break;
+    }
+    err << "\", Got ";
+    OutputToken(errToken, err);
+    delete errToken;
+    Fail(err.str());
 }
 
-void Parser::Fail(KeywordType ktype) {
-    Fail(true, TokenType::Keyword, SymbolType::None, ktype);
+void Parser::Fail(KeywordType ktype, Token * errToken) {
+    std::stringstream err;
+    err << "FAIL0!: Expected Keyword \"";
+    switch (ktype) {
+        case KeywordType::Int:
+            err << "int";
+            break;
+        case KeywordType::Return:
+            err << "return";
+            break;
+        case KeywordType::If:
+            err << "if";
+            break;
+        case KeywordType::Else:
+            err << "else";
+            break;
+        case KeywordType::For:
+            err << "for";
+            break;
+        case KeywordType::While:
+            err << "while";
+            break;
+        case KeywordType::Do:
+            err << "do";
+            break;
+        case KeywordType::Break:
+            err << "break";
+            break;
+        case KeywordType::Continue:
+            err << "continue";
+            break;
+        case KeywordType::None:
+            err << "None";
+            break;
+    }
+    err << "\", Got ";
+    OutputToken(errToken, err);
+    delete errToken;
+    Fail(err.str());
+}
+
+//Fail should output EVEN MORE information now
+void Parser::Fail(const std::string & message) {
+    throw ParsingException(message.c_str());
+}
+
+void Parser::OutputToken(Token * token, std::ostream & os) {
+    switch (token->Type()) {
+        case TokenType::Identifier:
+            os << "Identifier: \"";
+            break;
+        case TokenType::Keyword:
+            os << "Keyword: \"";
+            break;
+        case TokenType::Literal:
+            os << "Literal: \"";
+            break;
+        case TokenType::Symbol:
+            os << "Symbol: \"";
+            break;
+        case TokenType::None:
+            break;
+    }
+    os << token->GetRaw() << "\" (Line " << token->GetLine() << ", Character " << token->GetChar() << ")";
 }
 
 bool Parser::Verify() {
@@ -704,15 +766,15 @@ const SymbolMap & Parser::Map() const {
 }
 
 void Parser::TryParse(TokenType type) {
-    IsNextToken(type) ? PopFront() : Fail(type);
+    IsNextToken(type) ? PopFront() : Fail(type, Front());
 }
 
 void Parser::TryParse(SymbolType stype) {
-    IsNextToken(stype) ? PopFront() : Fail(stype);
+    IsNextToken(stype) ? PopFront() : Fail(stype, Front());
 }
 
 void Parser::TryParse(KeywordType ktype) {
-    IsNextToken(ktype) ? PopFront() : Fail(ktype);
+    IsNextToken(ktype) ? PopFront() : Fail(ktype, Front());
 }
 
 Parser::~Parser() {
@@ -759,7 +821,7 @@ GlobalNode *Parser::ParseGlobalDeclaration() {
         PopFront();
         option = ParseExpression();
         if (option->Type() != SyntaxType::Constant) {
-            throw ParsingException("Global definition with non-constant: " + var_name->GetRaw());
+            Fail("Global definition with non-constant: " + var_name->GetRaw());
         } else {
             value = ((ConstantNode *)option)->Value();
         }

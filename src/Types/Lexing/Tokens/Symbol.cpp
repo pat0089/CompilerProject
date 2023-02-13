@@ -9,7 +9,7 @@ string Symbol::TypeString() const {
 
 /// String Constructor
 /// \param toInit string to read
-Symbol::Symbol(const string &toInit) : Token(toInit) {
+Symbol::Symbol(const std::string & toInit, int curChar, int curLine) : Token(toInit, curChar, curLine) {
     _symType = GetSymType(toInit);
 }
 

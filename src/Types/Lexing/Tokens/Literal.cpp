@@ -9,7 +9,7 @@ string Literal::TypeString() const {
 
 /// String Constructor
 /// \param toInit string to read
-Literal::Literal(const string &toInit) : Token(toInit) { }
+Literal::Literal(const std::string & toInit, int curChar, int curLine) : Token(toInit, curChar, curLine) { }
 
 /// Virtual copy constructor
 /// \return new smart pointer copy of this token

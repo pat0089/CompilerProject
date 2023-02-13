@@ -4,7 +4,7 @@
 
 class Identifier : public Token {
 public:
-    explicit Identifier(const std::string & toInit);
+    explicit Identifier(const std::string & toInit, int curChar, int curLine);
     std::string TypeString() const override;
     Token * Clone() override;
     Identifier(const Identifier & toCopy) = default;

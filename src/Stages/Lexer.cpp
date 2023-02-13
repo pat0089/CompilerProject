@@ -11,6 +11,9 @@ const regex Lexer::isIdentifier = regex("[_a-zA-Z][_a-zA-Z0-9]{0,30}");
 const regex Lexer::isLiteral = regex("[0-9]+");
 const regex Lexer::isSymbol = regex(R"(\(|\)|\{|\}|\<|\>|\[|\]|\;|\+|\-|\*|\/|\=|\~|\!|\||\&|\:|\?|\%|\^|\,)");
 
+int Lexer::_char = 1;
+int Lexer::_line = 1;
+
 Lexer::Lexer() {
     _tokens = new TokenList();
 }
@@ -54,9 +57,9 @@ string Lexer::LexNextToken(istream & is) {
         //grab the next char and put it on the string
         //also assign it to test for symbol
         is.get(cur);
+        _char++;
         toTest = cur;
         if (!isspace(cur)) toTokenize.push_back(cur);
-
         //test if the token we're reading is a symbol character
         if (std::regex_match(toTest, isSymbol)) {
             //if the token isn't the only char we've read,
@@ -70,19 +73,39 @@ string Lexer::LexNextToken(istream & is) {
                 is.putback(cur);
                 toTokenize.pop_back();
                 //get rid of trailing whitespace
-                while (isspace(is.peek()) && !is.eof()) { is.get(cur); }
+                while (isspace(is.peek()) && !is.eof()) {
+                    is.get(cur);
+                    _char++;
+                    if (cur == '\n') {
+                        _line++;
+                        _char = 1;
+                    }
+                }
                 return toTokenize;
             } else {
                 //get rid of trailing whitespace
-                while (isspace(is.peek()) && !is.eof()) { is.get(cur); }
+                while (isspace(is.peek()) && !is.eof()) {
+                    is.get(cur);
+                    _char++;
+                    if (cur == '\n') {
+                        _line++;
+                        _char = 1;
+                    }
+                }
                 return toTokenize;
             }
         }
 
     }
     //get rid of trailing whitespace
-    while (isspace(is.peek()) && !is.eof()) { is.get(cur); }
-
+    while (isspace(is.peek()) && !is.eof()) {
+        is.get(cur);
+        _char++;
+        if (cur == '\n') {
+            _line++;
+            _char = 1;
+        }
+    }
     return toTokenize;
 }
 
@@ -91,4 +114,12 @@ string Lexer::LexNextToken(istream & is) {
 bool Lexer::Verify() {
     if (!_verified) _verified = _tokens->Verify();
     return _verified;
+}
+
+int Lexer::GetCurChar() {
+    return _char;
+}
+
+int Lexer::GetCurLine() {
+    return _line;
 }

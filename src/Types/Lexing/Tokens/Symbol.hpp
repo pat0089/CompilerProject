@@ -16,7 +16,7 @@ enum class SymbolType { None , Semicolon, Colon, Question_Mark,
 
 class Symbol : public Token {
 public:
-    explicit Symbol(const std::string & toInit);
+    explicit Symbol(const std::string & toInit, int curChar, int curLine);
     Symbol(const Symbol & toCopy);
     std::string TypeString() const override;
     SymbolType SymType() const;
