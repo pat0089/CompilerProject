@@ -2,6 +2,7 @@
 #define COMPILERPROJECT_SYNTAXNODE_HPP
 #include <iostream>
 #include <string>
+#include <vector>
 
 enum class SyntaxType { None, Program,
         Function, Function_Call, Parameters, Parameter, Body,
@@ -49,6 +50,8 @@ public:
     virtual std::string PrettyPrint() = 0;
 
     SyntaxType Type() const;
+
+    static std::vector<SyntaxNode *> MasterNodeList;
 
 protected:
 

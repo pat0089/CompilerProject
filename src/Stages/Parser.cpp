@@ -15,7 +15,10 @@ void Parser::Parse(const TokenList & tokens) {
         _ast->Program(ParseProgram());
     } catch (ParsingException & e) {
         delete _ast;
-        delete _curList;
+        for (int i = 0; i < SyntaxNode::MasterNodeList.size(); i++) {
+            SyntaxNode * toDelete = SyntaxNode::MasterNodeList[i];
+            delete toDelete;
+        }
         throw e;
     }
 }
@@ -779,6 +782,7 @@ void Parser::TryParse(KeywordType ktype) {
 
 Parser::~Parser() {
     delete _curList;
+    delete _ast;
 }
 
 ExpressionNode *Parser::ParseFunctionCall() {

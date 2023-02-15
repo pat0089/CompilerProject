@@ -1,11 +1,17 @@
 #include "SyntaxNode.hpp"
 
+std::vector<SyntaxNode *> SyntaxNode::MasterNodeList = std::vector<SyntaxNode *>();
+
 /// Default constructor, no children or parent and "None" type
-SyntaxNode::SyntaxNode() : _childCount(0), _parent(nullptr), _children(nullptr), _stype(SyntaxType::None) { }
+SyntaxNode::SyntaxNode() : _childCount(0), _parent(nullptr), _children(nullptr), _stype(SyntaxType::None) {
+    MasterNodeList.push_back(this);
+}
 
 /// Type Constructor
 /// \param stype type of syntax to set node to
-SyntaxNode::SyntaxNode(SyntaxType stype) : _childCount(0), _parent(nullptr), _children(nullptr), _stype(stype) {}
+SyntaxNode::SyntaxNode(SyntaxType stype) : _childCount(0), _parent(nullptr), _children(nullptr), _stype(stype) {
+    MasterNodeList.push_back(this);
+}
 
 /// Copy Constructor, copy the parent and make a new list of the same children
 /// \param node node to copy
@@ -14,6 +20,7 @@ SyntaxNode::SyntaxNode(const SyntaxNode &node) : _childCount(node._childCount), 
     for (int i = 0; i < _childCount; i++) {
         _children[i] = node._children[i];
     }
+    MasterNodeList.push_back(this);
 }
 
 /// Set the node's parent
