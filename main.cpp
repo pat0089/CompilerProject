@@ -16,7 +16,7 @@ int main(int argc, char * argv[]) {
 
     std::ifstream fin(fname);
     Compiler.Lex(fin);
-    cout << Compiler.GetLexedList();
+    //cout << Compiler.GetLexedList();
 
     try {
         Compiler.Parse();

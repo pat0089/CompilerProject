@@ -30,7 +30,7 @@ public:
 
     void Parent(SyntaxNode * parent);
 
-    void Add(SyntaxNode ** children, int childCount);
+    void Add(const std::vector<SyntaxNode *> & newChildren);
     void Add(SyntaxNode * child);
 
     void Remove(int i);
@@ -51,12 +51,9 @@ public:
 
     SyntaxType Type() const;
 
-    static std::vector<SyntaxNode *> MasterNodeList;
-
 protected:
 
-    int _childCount;
-    SyntaxNode ** _children;
+    std::vector<SyntaxNode *> _children;
     SyntaxNode * _parent;
 
     SyntaxType _stype;
