@@ -400,8 +400,6 @@ StatementNode * Parser::ParseStatement() {
             toReturn = new BreakNode();
         } else if (temp->KeyType() == KeywordType::Continue) {
             toReturn = new ContinueNode();
-        } else {
-            throw ParsingException("Failed to parse Statement");
         }
         delete temp;
     }
@@ -455,7 +453,6 @@ ExpressionNode *Parser::ParseConditionalExpression() {
         delete conditional_expr;
         throw e;
     }
-    if (conditional_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     if (IsNextToken(SymbolType::Question_Mark)) {
         PopFront();
@@ -466,7 +463,6 @@ ExpressionNode *Parser::ParseConditionalExpression() {
             delete expr;
             throw e;
         }
-        if (expr == nullptr) throw ParsingException("Missing second expression!");
 
         TryParse(SymbolType::Colon);
 
@@ -477,7 +473,6 @@ ExpressionNode *Parser::ParseConditionalExpression() {
             delete expr2;
             throw e;
         }
-        if (expr2 == nullptr) throw ParsingException("Missing third expression!");
 
         conditional_expr = new ConditionalExpressionNode(conditional_expr, expr, expr2);
     }
@@ -495,7 +490,6 @@ ExpressionNode *Parser::ParseLogicalOrExpression() {
         delete logical_or_expr;
         throw e;
     }
-    if (logical_or_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Vertical_Line)) {
         auto tempToken = Front();
@@ -513,7 +507,6 @@ ExpressionNode *Parser::ParseLogicalOrExpression() {
             delete next_expr;
             throw e;
         }
-        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
         logical_or_expr = new BinaryOperatorNode(op, op2, logical_or_expr, next_expr);
         delete tempToken;
@@ -531,7 +524,6 @@ ExpressionNode *Parser::ParseLogicalAndExpression() {
         delete logical_and_expr;
         throw e;
     }
-    if (logical_and_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::And)) {
         auto tempToken = Front();
@@ -549,7 +541,6 @@ ExpressionNode *Parser::ParseLogicalAndExpression() {
             delete next_expr;
             throw e;
         }
-        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
         logical_and_expr = new BinaryOperatorNode(op, op2, logical_and_expr, next_expr);
         delete tempToken;
@@ -567,7 +558,6 @@ ExpressionNode *Parser::ParseBitwiseOrExpression() {
         delete bitwise_or_expr;
         throw e;
     }
-    if (bitwise_or_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Vertical_Line)) {
         auto temp = Front();
@@ -580,7 +570,6 @@ ExpressionNode *Parser::ParseBitwiseOrExpression() {
                 delete next_expr;
                 throw e;
             }
-            if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
             bitwise_or_expr = new BinaryOperatorNode(SymbolType::Vertical_Line, SymbolType::None, bitwise_or_expr, next_expr);
             delete temp;
@@ -601,7 +590,6 @@ ExpressionNode *Parser::ParseBitwiseXorExpression() {
         delete bitwise_xor_expr;
         throw e;
     }
-    if (bitwise_xor_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Carrot)) {
         TryParse(SymbolType::Carrot);
@@ -613,7 +601,6 @@ ExpressionNode *Parser::ParseBitwiseXorExpression() {
             delete next_expr;
             throw e;
         }
-        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
         bitwise_xor_expr = new BinaryOperatorNode(SymbolType::Carrot, SymbolType::None, bitwise_xor_expr, next_expr);
     }
@@ -628,7 +615,6 @@ ExpressionNode *Parser::ParseBitwiseAndExpression() {
         delete bitwise_and_expr;
         throw e;
     }
-    if (bitwise_and_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::And)) {
         auto temp = Front();
@@ -641,7 +627,6 @@ ExpressionNode *Parser::ParseBitwiseAndExpression() {
                 delete next_expr;
                 throw e;
             }
-            if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
             bitwise_and_expr = new BinaryOperatorNode(SymbolType::And, SymbolType::None, bitwise_and_expr, next_expr);
             delete temp;
@@ -661,7 +646,6 @@ ExpressionNode *Parser::ParseEqualityExpression() {
         delete equality_expr;
         throw e;
     }
-    if (equality_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Equals) || IsNextToken(SymbolType::Exclaimation)) {
         auto tempToken = Front();
@@ -680,7 +664,6 @@ ExpressionNode *Parser::ParseEqualityExpression() {
             delete next_expr;
             throw e;
         }
-        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
         equality_expr = new BinaryOperatorNode(op, op2, equality_expr, next_expr);
         delete tempToken;
@@ -698,7 +681,6 @@ ExpressionNode *Parser::ParseRelationalExpression() {
         delete relational_expr;
         throw e;
     }
-    if (relational_expr == nullptr) throw ParsingException("Failed to parse first expression!");
 
     while (IsNextToken(SymbolType::Open_Chevron) || IsNextToken(SymbolType::Close_Chevron)) {
         auto tempToken = Front();
@@ -716,7 +698,6 @@ ExpressionNode *Parser::ParseRelationalExpression() {
             delete next_expr;
             throw e;
         }
-        if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
         relational_expr = new BinaryOperatorNode(op, op2, relational_expr, next_expr);
         delete tempToken;
@@ -750,7 +731,6 @@ ExpressionNode *Parser::ParseBitwiseShiftExpression() {
                 delete next_expr;
                 throw e;
             }
-            if (next_expr == nullptr) throw ParsingException("Missing second expression!");
 
             shift_expr = new BinaryOperatorNode(op, op, shift_expr, next_expr);
             delete tempToken;
@@ -773,7 +753,6 @@ ExpressionNode *Parser::ParseAdditiveExpression() {
         delete term;
         throw e;
     }
-    if (term == nullptr) throw ParsingException("Missing first term!");
 
     while (IsNextToken(SymbolType::Plus) || IsNextToken(SymbolType::Minus)) {
         auto tempToken = Front();
@@ -786,7 +765,6 @@ ExpressionNode *Parser::ParseAdditiveExpression() {
             delete next_term;
             throw e;
         }
-        if (next_term == nullptr) throw ParsingException("Missing second term!");
 
         term = new BinaryOperatorNode(op, SymbolType::None, term, next_term);
         delete tempToken;
@@ -804,7 +782,6 @@ TermNode *Parser::ParseTerm() {
         delete factor;
         throw e;
     }
-    if (factor == nullptr) throw ParsingException("Failed to parse first factor!");
 
     while (IsNextToken(SymbolType::Asterisk) || IsNextToken(SymbolType::ForwardSlash) || IsNextToken(SymbolType::Percent)) {
         auto tempToken = Front();
@@ -817,7 +794,6 @@ TermNode *Parser::ParseTerm() {
             delete next_factor;
             throw e;
         }
-        if (next_factor == nullptr) throw ParsingException("Missing second factor!");
 
         factor = (TermNode *)(new BinaryOperatorNode(op, SymbolType::None, factor, next_factor));
         delete tempToken;
