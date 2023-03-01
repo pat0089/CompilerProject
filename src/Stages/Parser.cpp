@@ -15,7 +15,6 @@ void Parser::Parse(const TokenList & tokens) {
         _ast = new AST();
         _ast->Program(ParseProgram());
     } catch (ParsingException & e) {
-        delete _ast;
         throw e;
     }
 }
@@ -404,6 +403,7 @@ StatementNode * Parser::ParseStatement() {
         delete temp;
     }
     //DONT FORGET THE SEMICOLON
+    if (!toReturn) Fail("Failed to parse Statement!");
     if (toReturn->Type() != SyntaxType::Conditional_Statement && toReturn->Type() != SyntaxType::Body && toReturn->Type() != SyntaxType::While_Loop && toReturn->Type() != SyntaxType::For_Loop)
         TryParse(SymbolType::Semicolon);
     return toReturn;
@@ -920,7 +920,7 @@ Token *Parser::PeekFront() {
 
 void Parser::Fail(bool hasMain) {
     if (!hasMain) {
-        Fail(std::string("FAIL1!: No \'main\' function found\n"));
+        Fail("FAIL1!: No \'main\' function found\n");
     }
 }
 
@@ -946,7 +946,7 @@ void Parser::Fail(TokenType ttype, Token * errToken) {
     err << "Got ";
     OutputToken(errToken, err);
     delete errToken;
-    Fail(err.str());
+    Fail(err.str().c_str());
 }
 
 void Parser::Fail(SymbolType stype, Token * errToken) {
@@ -1038,7 +1038,7 @@ void Parser::Fail(SymbolType stype, Token * errToken) {
     err << "\", Got ";
     OutputToken(errToken, err);
     delete errToken;
-    Fail(err.str());
+    Fail(err.str().c_str());
 }
 
 void Parser::Fail(KeywordType ktype, Token * errToken) {
@@ -1079,12 +1079,12 @@ void Parser::Fail(KeywordType ktype, Token * errToken) {
     err << "\", Got ";
     OutputToken(errToken, err);
     delete errToken;
-    Fail(err.str());
+    Fail(err.str().c_str());
 }
 
 //Fail should output EVEN MORE information now
-void Parser::Fail(const std::string & message) {
-    throw ParsingException(message.c_str());
+void Parser::Fail(const char * message) {
+    throw ParsingException(message);
 }
 
 void Parser::OutputToken(Token * token, std::ostream & os) {
@@ -1203,7 +1203,7 @@ GlobalNode *Parser::ParseGlobalDeclaration() {
             throw e;
         }
         if (option->Type() != SyntaxType::Constant) {
-            Fail("Global definition with non-constant: " + var_name->GetRaw());
+            Fail(std::string("Global definition with non-constant: " + var_name->GetRaw()).c_str());
         } else {
             value = ((ConstantNode *)option)->Value();
         }

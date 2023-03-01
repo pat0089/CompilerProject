@@ -29,11 +29,14 @@ void SyntaxNode::Add(const std::vector<SyntaxNode *> & newChildren) {
 /// Adds a child pointer to the array of children pointers
 /// \param child pointer to child to add
 void SyntaxNode::Add(SyntaxNode * child) {
-    //add to child vector
-    _children.push_back(child);
+    //prevent nasty segfaults
+    if (child) {
+        //add to child vector
+        _children.push_back(child);
 
-    //set child's parent to us
-    child->Parent(this);
+        //set child's parent to us
+        child->Parent(this);
+    }
 }
 
 /// Removes a child at given index

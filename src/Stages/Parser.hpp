@@ -68,7 +68,7 @@ private:
     void Fail(TokenType ttype, Token * errToken);
     void Fail(SymbolType stype, Token * errToken);
     void Fail(KeywordType ktype, Token * errToken);
-    void Fail(const std::string & message);
+    void Fail(const char * message);
 
     void PopFront();
     Token * PeekFront();
