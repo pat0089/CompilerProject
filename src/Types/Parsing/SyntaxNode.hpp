@@ -2,6 +2,7 @@
 #define COMPILERPROJECT_SYNTAXNODE_HPP
 #include <iostream>
 #include <string>
+#include <vector>
 
 enum class SyntaxType { None, Program,
         Function, Function_Call, Parameters, Parameter, Body,
@@ -29,7 +30,7 @@ public:
 
     void Parent(SyntaxNode * parent);
 
-    void Add(SyntaxNode ** children, int childCount);
+    void Add(const std::vector<SyntaxNode *> & newChildren);
     void Add(SyntaxNode * child);
 
     void Remove(int i);
@@ -52,8 +53,7 @@ public:
 
 protected:
 
-    int _childCount;
-    SyntaxNode ** _children;
+    std::vector<SyntaxNode *> _children;
     SyntaxNode * _parent;
 
     SyntaxType _stype;

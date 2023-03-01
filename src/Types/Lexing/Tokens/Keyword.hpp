@@ -6,7 +6,7 @@ enum class KeywordType { None, Return, Int, If, Else, For, While, Do, Break, Con
 
 class Keyword : public Token {
 public:
-    explicit Keyword(const std::string & toInit);
+    explicit Keyword(const std::string & toInit, int curChar, int curLine);
     Keyword(const Keyword & toCopy);
     ~Keyword() override = default;
     std::string TypeString() const override;

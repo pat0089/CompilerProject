@@ -13,7 +13,9 @@ Token::~Token() { delete _readCharacters; }
 
 /// String Constructor, initializes type of token
 /// \param chars string to read
-Token::Token(const string & chars) {
+Token::Token(const string & chars, int curChar, int curLine) {
+    _char = curChar;
+    _line = curLine;
     _readCharacters = new string(chars);
     _tokenType = GetType(chars);
 }
@@ -30,7 +32,7 @@ string & Token::GetRaw() const {
 /// \return reference to output stream
 ostream &operator<<(ostream &os, const Token &token) {
     if (!token._readCharacters->empty()) {
-        os << token.TypeString()[0] << ":" << token.GetRaw();
+        os << token.TypeString()[0] << ":" << token.GetRaw() << " L:" << token.GetLine() << " C:" << token.GetChar();
     }
     return os;
 }
@@ -40,21 +42,21 @@ bool Token::operator==(const Token &token) const {
 }
 
 ///Copy Constructor
-Token::Token(const Token &toCopy) : _readCharacters(new string(*toCopy._readCharacters)), _tokenType(toCopy._tokenType) {}
+Token::Token(const Token &toCopy) : _readCharacters(new string(*toCopy._readCharacters)), _tokenType(toCopy._tokenType), _char(toCopy._char), _line(toCopy._line) {}
 
 /// Creates a new token with its type from a string
 /// \param rawString string to create from
 /// \return smart pointer to typed token
-Token * Token::Create(const string & rawString) {
+Token * Token::Create(const string & rawString, int curChar, int curLine) {
     switch (GetType(rawString)) {
         case TokenType::Keyword:
-            return (Token *)(new Keyword(rawString));
+            return (Token *)(new Keyword(rawString, curChar, curLine));
         case TokenType::Identifier:
-            return (Token *)(new Identifier(rawString));
+            return (Token *)(new Identifier(rawString, curChar, curLine));
         case TokenType::Literal:
-            return (Token *)(new Literal(rawString));
+            return (Token *)(new Literal(rawString, curChar, curLine));
         case TokenType::Symbol:
-            return (Token *)(new Symbol(rawString));
+            return (Token *)(new Symbol(rawString, curChar, curLine));
         case TokenType::None:
         default:
             return nullptr;
@@ -82,6 +84,14 @@ TokenType Token::GetType(const string &rawString) {
 /// \return type of the token
 TokenType Token::Type() const {
     return _tokenType;
+}
+
+int Token::GetChar() const {
+    return _char;
+}
+
+int Token::GetLine() const {
+    return _line;
 }
 
 

@@ -9,15 +9,12 @@
 #include "../Types/Parsing/Syntax/Expressions/FactorNode.hpp"
 #include "../Types/SymbolMap.hpp"
 
-class ParsingException : public std::exception {
+class ParsingException : public std::runtime_error {
 public:
-    explicit ParsingException(const std::string & msg) : message("ParsingException: " + msg) {}
-    const char * what() {
-        return message.c_str();
-    }
-private:
-    std::string message;
+    explicit ParsingException(const char * msg) : std::runtime_error(std::string("ParsingException: ") + msg) {}
 };
+
+static_assert(std::is_nothrow_copy_constructible<ParsingException>::value, "ParsingException must be nothrow copy constructible");
 
 class Parser {
 public:
@@ -29,10 +26,8 @@ public:
     bool Verify();
 
 private:
-    AST _ast;
+    AST * _ast;
     SymbolMap _symbolMap;
-
-    //thinking ahead for error detection and mitigation
     TokenList * _curList;
 
     //Lexed list manipulation functions
@@ -69,10 +64,11 @@ private:
     TermNode * ParseTerm();
     FactorNode * ParseFactor();
 
-    void Fail(bool hasMain = true, TokenType ttype = TokenType::None, SymbolType stype = SymbolType::None, KeywordType ktype = KeywordType::None);
-    void Fail(TokenType type);
-    void Fail(SymbolType stype);
-    void Fail(KeywordType ktype);
+    void Fail(bool hasMain = true);
+    void Fail(TokenType ttype, Token * errToken);
+    void Fail(SymbolType stype, Token * errToken);
+    void Fail(KeywordType ktype, Token * errToken);
+    void Fail(const char * message);
 
     void PopFront();
     Token * PeekFront();
@@ -101,6 +97,8 @@ private:
     ExpressionNode *ParseFunctionCall();
 
     GlobalNode *ParseGlobalDeclaration();
+
+    void OutputToken(Token * token, std::ostream & os);
 };
 
 #endif //COMPILERPROJECT_PARSER_HPP

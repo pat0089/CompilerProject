@@ -140,6 +140,7 @@ void CodeGenerator::HandleFunction(const FunctionNode & fnode, std::ostream &fil
 
 
 void CodeGenerator::HandleFunctionCall(const FunctionCallNode &fcnode, std::ostream &file) {
+    if (_symbolMap->FindGlobal(fcnode.Name())) throw CodeGenerationException("Function call on declared named global constant!");
     if (!fcnode.ContainsBody()) {
         //generate in reverse order and push to stack
         HandleParameters(fcnode.Params(), file);
@@ -220,11 +221,13 @@ void CodeGenerator::HandleParameter(const ParameterNode &pnode, int index) {
 void CodeGenerator::HandleReturn(const ReturnNode & rnode, std::ostream &file) {
     if (rnode.Parent().Parent().Type() == SyntaxType::Function && _symbolMap) _symbolMap->ContainsReturn(true);
     if (rnode.ChildCount()) Generate(rnode.Child(0), file);
+    else throw CodeGenerationException("Return statement missing child!");
     WriteFunctionEpilogue(file);
     WriteReturn(file);
 }
 
 void CodeGenerator::HandleUnaryOperator(const UnaryOperatorNode &uonode, std::ostream &file) {
+    if (!uonode.ChildCount()) throw CodeGenerationException("Unary operator missing child!");
     Generate(uonode.Child(0), file);
     switch (uonode.GetOperator()) {
         case OperatorType::Bitwise_Complement:
@@ -245,6 +248,7 @@ void CodeGenerator::HandleUnaryOperator(const UnaryOperatorNode &uonode, std::os
 void CodeGenerator::HandleBinaryOperator(const BinaryOperatorNode & bonode, std::ostream & file) {
     //generate children in a specific order
     //separate from the recursive Generate call
+    if (bonode.ChildCount() != 2) throw CodeGenerationException("Binary operator doesn't contain enough children!");
     string r0 = "eax";
     string r1 = "ecx";
     auto op = bonode.GetOperator();

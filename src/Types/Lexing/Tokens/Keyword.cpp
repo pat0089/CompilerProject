@@ -15,7 +15,7 @@ KeywordType Keyword::KeyType() const {
 
 /// String Constructor
 /// \param toInit string to read
-Keyword::Keyword(const string &toInit) : Token(toInit) {
+Keyword::Keyword(const std::string & toInit, int curChar, int curLine) : Token(toInit, curChar, curLine) {
     _keyType = GetKeyType(toInit);
 }
 

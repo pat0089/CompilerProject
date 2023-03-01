@@ -41,7 +41,7 @@ TokenList::TokenList(const TokenList &toCopy) : _tokens(new deque<Token *>) {
 /// \return reference to output stream
 ostream &operator<<(ostream &os, const TokenList &tokenList) {
     for (auto & _token : *tokenList._tokens) {
-        os << *_token << " | ";
+        os << *_token << "\n";
     }
     return os;
 }
@@ -52,7 +52,7 @@ ostream &operator<<(ostream &os, const TokenList &tokenList) {
 /// \return reference to input stream
 istream &operator>>(istream &is, TokenList &tokenList) {
     while (!is.eof()) {
-        auto checkForNull = Token::Create(Lexer::LexNextToken(is));
+        auto checkForNull = Token::Create(Lexer::LexNextToken(is), Lexer::GetCurChar(), Lexer::GetCurLine());
         if (checkForNull != nullptr) tokenList._tokens->emplace_back(checkForNull);
     }
     return is;

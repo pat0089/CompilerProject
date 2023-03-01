@@ -34,9 +34,15 @@ Compiler::~Compiler() {
 /// Generates an assembly file with the name supplied based on the parsed AST
 /// \param fname Name of the file we're generating
 void Compiler::Generate(const std::string & fname) {
-    if (_lexer->Verify() && _parser->Verify()) {
-        //pass the function map information over to the code generator
-        _codeGenerator->Map(_parser->Map());
-        _codeGenerator->Generate(_parser->GetAST(), fname + ".s");
+    if (_lexer->Verify()) {
+        if (_parser->Verify()) {
+            //pass the function map information over to the code generator
+            _codeGenerator->Map(_parser->Map());
+            _codeGenerator->Generate(_parser->GetAST(), fname + ".s");
+        } else {
+            throw CodeGenerationException("Failed to verify valid parse tree (doesn't contain \'main\')!");
+        }
+    } else {
+        throw CodeGenerationException("Failed to verify match all braces!");
     }
 }

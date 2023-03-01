@@ -9,7 +9,7 @@ string Identifier::TypeString() const {
 
 /// String constructor
 /// \param toInit string
-Identifier::Identifier(const string &toInit) : Token(toInit) {}
+Identifier::Identifier(const std::string & toInit, int curChar, int curLine) : Token(toInit, curChar, curLine) {}
 
 /// Virtual copy constructor
 /// \return new smart pointer copy of this token

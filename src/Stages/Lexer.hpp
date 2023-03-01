@@ -31,9 +31,14 @@ public:
     const TokenList & GetList() const;
     static std::string LexNextToken(std::istream & is);
 
+    static int GetCurChar();
+    static int GetCurLine();
+
 private:
     TokenList * _tokens;
     bool _verified = false;
+    static int _line;
+    static int _char;
 };
 
 

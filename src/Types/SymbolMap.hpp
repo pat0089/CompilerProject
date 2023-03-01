@@ -12,6 +12,10 @@ struct FunctionInfoTable {
     bool containsReturn = false;
 };
 
+enum class Types_Supported {
+    Int, Char, Enum, Float, Double
+};
+
 class SymbolMap {
 public:
     SymbolMap();
@@ -53,6 +57,8 @@ private:
     std::unordered_map<std::string, FunctionInfoTable> * _functionMap = nullptr;
     std::unordered_map<std::string, int> * _globalMap = nullptr;
     std::unordered_set<std::string> * _globalScope = nullptr;
+
+    //
 };
 
 

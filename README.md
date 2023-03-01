@@ -8,11 +8,10 @@ I learned a lot about how compiled languages are implemented while making this c
  - Functions
    - Local Variables
    - Scoped context
-   - Loops
+ - Loops
  - Global variables
  - Access to cstdlib
-
-After making this compiler, I planned to make a general-purpose compiler, but maybe a interpreted language for easy development of graphics applications would be cool too
+ - Error messaging with location in source
 
 [See my Trello board for updates and new features](https://trello.com/b/TD2Sp6JF/compilerproject)
 
