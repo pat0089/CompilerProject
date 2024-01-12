@@ -26,15 +26,15 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
 
-    auto fnameWithoutFS = fname.substr(0, fname.find_last_of('.'));
+    auto fnameWithoutExtension = fname.substr(0, fname.find_last_of('.'));
     try {
-        Compiler.Generate(fnameWithoutFS);
+        Compiler.Generate(fnameWithoutExtension);
     } catch (CodeGenerationException & e) {
         cerr << e.what();
         exit(2);
     }
 
-    std::system(std::string("gcc -m32 " + fnameWithoutFS + ".s -o " + fnameWithoutFS).c_str());
+    std::system(std::string("gcc -m32 " + fnameWithoutExtension + ".s -o " + fnameWithoutExtension).c_str());
 
     return 0;
 }
